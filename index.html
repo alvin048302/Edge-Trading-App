@@ -1724,7 +1724,7 @@ async function evaluateSignal(idx){
     const prompt=buildTradePrompt(s);
     const resp=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01'},
+      headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
       body:JSON.stringify({
         model:'claude-sonnet-4-20250514',
         max_tokens:600,
@@ -1861,7 +1861,7 @@ async function generateBrief(idx){
   const btn=detailEl.querySelector('.brief-btn');if(btn){btn.classList.add('loading');btn.textContent='Writing...';}
   try{
     const prompt=buildTradePrompt(s)+`\n\nAccount: $${document.getElementById('acctSize').value||10000} · Risk: 1% · Max leverage: 3x`;
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:600,system:BRIEF_SYSTEM,messages:[{role:'user',content:prompt}]})});
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:600,system:BRIEF_SYSTEM,messages:[{role:'user',content:prompt}]})});
     if(!resp.ok)throw new Error(`API ${resp.status}`);
     const data=await resp.json();
     const b=JSON.parse((data.content?.find(c=>c.type==='text')?.text||'{}').replace(/```json|```/g,'').trim());
@@ -1910,7 +1910,7 @@ async function monitorTrade(tradeId){
     const riskD=Math.abs(t.entry-t.stop);
     const currR=((currPrice-t.entry)/riskD*(t.direction==='LONG'?1:-1)).toFixed(2);
     const prompt=`Review active position: ${t.asset} ${t.direction}\nEntry:${fmtP(t.entry)} Stop:${fmtP(t.stop)} Target:${fmtP(t.target)}\nCurrent price:${fmtP(currPrice)} Current P&L:${currR}R\nDays open:${Math.ceil((Date.now()-(t.entryTs||Date.now()))/86400000)}\nSignal score:${t.score||'N/A'}/18 | AI verdict:${t.aiVerdict?t.aiVerdict.verdict+' conf '+t.aiVerdict.confidence:'None'}\nSetup:${t.setup} | Session:${t.sessionQ||'N/A'}\nFunding(${t.asset}):${mkt[t.asset]?.funding?(mkt[t.asset].funding*100).toFixed(4)+'%':'N/A'}`;
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:400,system:MONITOR_SYSTEM,messages:[{role:'user',content:prompt}]})});
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:400,system:MONITOR_SYSTEM,messages:[{role:'user',content:prompt}]})});
     if(!resp.ok)throw new Error(`API ${resp.status}`);
     const data=await resp.json();
     const result=JSON.parse((data.content?.find(c=>c.type==='text')?.text||'{}').replace(/```json|```/g,'').trim());
@@ -1951,7 +1951,7 @@ async function debriefTrade(tradeId){
   try{
     const actualR=t.exitPrice?((Math.abs(t.exitPrice-t.entry)/Math.abs(t.stop-t.entry))*(t.status==='WIN'?1:-1)).toFixed(2):t.status==='WIN'?t.rr:-1;
     const prompt=`Post-trade debrief: ${t.asset} ${t.direction} → ${t.status}\nEntry:${fmtP(t.entry)} Stop:${fmtP(t.stop)} Target:${fmtP(t.target)} Exit:${t.exitPrice?fmtP(t.exitPrice):'At level'}\nActual R:${actualR}R (planned ${t.rr}R)\nSignal score:${t.score||'N/A'}/18 Tier:${t.tier||'N/A'} Setup:${t.setup}\nSession:${t.sessionQ||'N/A'} EntryType:${t.entryType||'N/A'}\nAI verdict:${t.aiVerdict?t.aiVerdict.verdict+' conf '+t.aiVerdict.confidence:'None'}\nAI edge:${t.aiVerdict?.edge||'N/A'}\nAuto-closed:${t.autoClose?'Yes':'No'}\nNotes:${t.notes||'None'}`;
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:500,system:DEBRIEF_SYSTEM,messages:[{role:'user',content:prompt}]})});
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:500,system:DEBRIEF_SYSTEM,messages:[{role:'user',content:prompt}]})});
     if(!resp.ok)throw new Error(`API ${resp.status}`);
     const data=await resp.json();
     const result=JSON.parse((data.content?.find(c=>c.type==='text')?.text||'{}').replace(/```json|```/g,'').trim());
@@ -2141,7 +2141,7 @@ async function generateWeeklyReview(){
     const totR=rVals.reduce((a,b)=>a+b,0);
     const tdata=recent.map(t=>({asset:t.asset,dir:t.direction,date:t.date,status:t.status,setup:t.setup,tier:t.tier||'N/A',score:t.score,session:t.sessionQ||'N/A',entryType:t.entryType||'N/A',rr:t.rr,aiVerdict:t.aiVerdict?{v:t.aiVerdict.verdict,c:t.aiVerdict.confidence}:null,pattern:t.debriefResult?.pattern_flag||null,processScore:t.debriefResult?.process_score||null}));
     const prompt=`Weekly review — last 14 days:\nTotal:${recent.length} Closed:${closed.length} (${wins}W/${losses}L) TotalR:${totR.toFixed(2)}R\nNot filled:${recent.filter(t=>t.status==='NOT_FILLED').length} Open:${recent.filter(t=>t.status==='OPEN').length}\n\nTrade data:\n${JSON.stringify(tdata,null,1)}`;
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:900,system:WEEKLY_SYSTEM,messages:[{role:'user',content:prompt}]})});
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:900,system:WEEKLY_SYSTEM,messages:[{role:'user',content:prompt}]})});
     if(!resp.ok)throw new Error(`API ${resp.status}`);
     const data=await resp.json();
     const result=JSON.parse((data.content?.find(c=>c.type==='text')?.text||'{}').replace(/```json|```/g,'').trim());
