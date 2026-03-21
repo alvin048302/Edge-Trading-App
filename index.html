@@ -528,7 +528,7 @@ textarea.fi{resize:none;height:64px;line-height:1.55;font-size:12px}
         <div class="fg"><div class="fl">Target</div><input class="fi" type="number" id="pTarget" placeholder="0" oninput="calcAll()"></div>
       </div>
       <div class="fg" style="margin-top:11px">
-        <div class="fl">Risk % of Position</div>
+        <div class="fl">Risk % Warning Threshold</div>
         <select class="fi" id="riskPct" onchange="calcAll()">
           <option value="0.5">0.5% — Conservative</option>
           <option value="1" selected>1.0% — Standard</option>
@@ -1193,9 +1193,8 @@ function logSignalDirect(idx){
   const rPct=parseFloat(document.getElementById('riskPct').value)||1;
   const E=parseFloat(s.entry.toFixed(priceDp(s.entry)));
   const SL=parseFloat(s.sl.toFixed(priceDp(s.sl)));
+  const posSize=acct*lev;
   const slPct=Math.abs(E-SL)/E;
-  const maxPosByRisk=(acct*(rPct/100))/slPct;
-  const posSize=Math.min(acct*lev, maxPosByRisk);
   const dollarRisk=posSize*slPct;
   const trade={
     id:Date.now().toString(),
@@ -1273,11 +1272,7 @@ function calcAll(){
   const acct=+document.getElementById('acctSize').value||10000;
   const lev=Math.max(0.1,Math.min(20,+document.getElementById('levInput').value||2));
   const riskPct=+document.getElementById('riskPct').value/100;
-  const rawPos=acct*lev;
-  // Risk cap: never risk more than riskPct of account on this trade
-  // posSize capped at: (acct × riskPct) / slPct — computed after we know E and S
-  // For now posSize = rawPos; will be capped below once E/S are known
-  let posSize=rawPos;
+  const posSize=acct*lev; // Position = account × leverage, always
 
   // Update leverage sub-labels
   document.getElementById('levSub').textContent=`Position: $${posSize.toLocaleString('en',{maximumFractionDigits:0})}`;
@@ -1294,15 +1289,8 @@ function calcAll(){
   const rewD=Math.abs(T-E);
   const rr=rewD/riskD;
 
-  // Apply risk% cap: max position = (account × riskPct) / slPct
-  // This ensures leverage is used but account risk never exceeds the chosen %
+  // Calculate actual dollar risk and account risk % — informational only, no cap
   const slPct=riskD/E;
-  const maxPosByRisk=(acct*riskPct)/slPct;
-  if(maxPosByRisk<posSize){
-    posSize=maxPosByRisk;
-    // Effective leverage after cap
-    document.getElementById('levSub').textContent=`Position: $${posSize.toLocaleString('en',{maximumFractionDigits:0})} (risk-capped)`;
-  }
   const dollarRisk=posSize*slPct;
   const acctRiskPct=(dollarRisk/acct)*100;
   const profit=posSize*(rewD/E);
@@ -1315,14 +1303,13 @@ function calcAll(){
   // How far SL is from liquidation as % of SL distance
   const safetyPct=riskD>0?Math.min(100,Math.abs(liqPrice-S)/riskD*100):100;
 
-  const effLev=(posSize/acct).toFixed(2);
   document.getElementById('pbAcct').textContent='$'+acct.toLocaleString('en',{maximumFractionDigits:0});
-  document.getElementById('pbLev').textContent=`${lev}× (eff: ${effLev}×)`;
+  document.getElementById('pbLev').textContent=`${lev}×`;
   document.getElementById('pbLev').className='pb-val '+(lev>3?'lev-warn':lev>=2?'lev-amb':'lev-ok');
   document.getElementById('pbPos').textContent='$'+posSize.toLocaleString('en',{maximumFractionDigits:0});
-  document.getElementById('pbRiskPct').textContent=acctRiskPct.toFixed(2)+'%';document.getElementById('pbRiskPct').className='pb-val '+(acctRiskPct>3?'lev-warn':acctRiskPct>1.5?'lev-amb':'lev-ok');
-  document.getElementById('pbRiskDollar').textContent='$'+dollarRisk.toFixed(0);
-  document.getElementById('pbProfit').textContent='+$'+profit.toFixed(0);
+  document.getElementById('pbRiskPct').textContent=acctRiskPct.toFixed(2)+'%';document.getElementById('pbRiskPct').className='pb-val '+(acctRiskPct>5?'lev-warn':acctRiskPct>2.5?'lev-amb':'pos');
+  document.getElementById('pbRiskDollar').textContent='$'+dollarRisk.toFixed(2);
+  document.getElementById('pbProfit').textContent='+$'+profit.toFixed(2);
   const rrEl=document.getElementById('pbRR');rrEl.textContent=rr.toFixed(2)+'R';rrEl.className='pb-val '+(rr>=2?'pos':rr>=1?'neu':'neg');
   document.getElementById('pbLiq').textContent=fmtP(liqPrice);
   // Liquidity bar: how close SL is to liquidation (green = far, red = close)
@@ -1332,13 +1319,19 @@ function calcAll(){
   const slToLiqPct=Math.abs(S-liqPrice)/E*100;
   document.getElementById('liqNote').textContent=`SL is ${slToLiqPct.toFixed(1)}% from liquidation · ${safetyPct.toFixed(0)}% buffer`;
 
-  // Risk alert
+  // Risk alerts — warnings only, position is never capped
   const alertEl=document.getElementById('riskAlert');
-  if(acctRiskPct>5){alertEl.innerHTML=`<div class="risk-alert ra-danger">⛔ Account risk ${acctRiskPct.toFixed(1)}% exceeds maximum. Reduce leverage or widen stop.</div>`;}
-  else if(acctRiskPct>2.5){alertEl.innerHTML=`<div class="risk-alert ra-warn">⚠ Account risk ${acctRiskPct.toFixed(1)}% is elevated. Standard maximum is 2%.</div>`;}
-  else if(lev>3){alertEl.innerHTML=`<div class="risk-alert ra-warn">⚠ Leverage ${lev}× exceeds recommended 3× ceiling.</div>`;}
-  else if(safetyPct<25){alertEl.innerHTML=`<div class="risk-alert ra-danger">⛔ SL is dangerously close to liquidation price (${safetyPct.toFixed(0)}% buffer). Reduce leverage.</div>`;}
-  else{alertEl.innerHTML=`<div class="risk-alert ra-ok">✓ Risk profile acceptable — ${acctRiskPct.toFixed(2)}% account risk at ${lev}× leverage.</div>`;}
+  if(acctRiskPct>5){
+    alertEl.innerHTML=`<div class="risk-alert ra-danger">⛔ Account risk ${acctRiskPct.toFixed(1)}% is very high. Consider reducing leverage.</div>`;
+  } else if(acctRiskPct>(riskPct*100)*1.5){
+    alertEl.innerHTML=`<div class="risk-alert ra-warn">⚠ Account risk ${acctRiskPct.toFixed(1)}% exceeds your ${(riskPct*100).toFixed(1)}% threshold.</div>`;
+  } else if(lev>3){
+    alertEl.innerHTML=`<div class="risk-alert ra-warn">⚠ Leverage ${lev}× exceeds recommended 3× ceiling.</div>`;
+  } else if(safetyPct<25){
+    alertEl.innerHTML=`<div class="risk-alert ra-danger">⛔ SL is close to liquidation (${safetyPct.toFixed(0)}% buffer). Reduce leverage.</div>`;
+  } else {
+    alertEl.innerHTML=`<div class="risk-alert ra-ok">✓ Position $${posSize.toLocaleString('en',{maximumFractionDigits:0})} · Risk $${dollarRisk.toFixed(2)} (${acctRiskPct.toFixed(2)}% of account)</div>`;
+  }
 }
 
 // Keep calcRR as alias for compatibility with signal useSig/sendToPlan
