@@ -1572,6 +1572,28 @@ function renderAiAccStats(){
 // ═══════════════════════════════════════════════════
 // AI EVALUATION ENGINE
 // ═══════════════════════════════════════════════════
+// Robust JSON parser — handles markdown fences, asterisks, trailing commas
+function safeParseJSON(raw){
+  if(!raw)return{};
+  let s=raw;
+  // Strip markdown code fences
+  s=s.replace(/```json\s*/gi,'').replace(/```\s*/g,'');
+  // Extract first {...} block
+  const start=s.indexOf('{');
+  const end=s.lastIndexOf('}');
+  if(start!==-1&&end!==-1&&end>start)s=s.slice(start,end+1);
+  // Remove markdown bold/italic asterisks inside string values
+  s=s.replace(/:\s*"([^"]*)"/g,(_,v)=>':"'+v.replace(/\*/g,'').replace(/\n/g,' ').trim()+'"');
+  // Remove trailing commas before } or ]
+  s=s.replace(/,\s*([}\]])/g,'$1');
+  try{return JSON.parse(s);}
+  catch(e){
+    // Last resort: try to extract key fields manually
+    console.warn('JSON parse failed:',e.message,'raw:',s.slice(0,200));
+    return{};
+  }
+}
+
 function sigFingerprint(s){
   const dateStr=new Date().toISOString().split('T')[0];
   return `${s.asset}_${s.direction}_${dateStr}_${s.scanned}_${s.score}`;
@@ -1681,9 +1703,8 @@ async function evaluateSignal(idx){
     }
     const data=await resp.json();
     const raw=data.content?.find(c=>c.type==='text')?.text||'{}';
-    const clean=raw.replace(/```json|```/g,'').trim();
-    const verdict=JSON.parse(clean);
-    if(!verdict.verdict||!verdict.confidence)throw new Error('Invalid response structure');
+    const verdict=safeParseJSON(raw);
+    if(!verdict.verdict||!verdict.confidence)throw new Error('Invalid response — try again');
 
     // Cache it
     verdict.ts=new Date().toLocaleTimeString('en-SG',{hour:'2-digit',minute:'2-digit'});
@@ -1807,7 +1828,7 @@ async function generateBrief(idx){
     const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:600,system:BRIEF_SYSTEM,messages:[{role:'user',content:prompt}]})});
     if(!resp.ok)throw new Error(`API ${resp.status}`);
     const data=await resp.json();
-    const b=JSON.parse((data.content?.find(c=>c.type==='text')?.text||'{}').replace(/```json|```/g,'').trim());
+    const b=safeParseJSON(data.content?.find(c=>c.type==='text')?.text||'{}');
     const ts=new Date().toLocaleTimeString('en-SG',{hour:'2-digit',minute:'2-digit'});
     signals[idx].brief=b;signals[idx].briefTs=ts;localStorage.setItem('edge_v4_sigs',JSON.stringify(signals));
     briefEl.innerHTML=renderBriefHTML(b,s,ts);
@@ -1856,10 +1877,10 @@ async function monitorTrade(tradeId){
     const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:400,system:MONITOR_SYSTEM,messages:[{role:'user',content:prompt}]})});
     if(!resp.ok)throw new Error(`API ${resp.status}`);
     const data=await resp.json();
-    const result=JSON.parse((data.content?.find(c=>c.type==='text')?.text||'{}').replace(/```json|```/g,'').trim());
+    const result=safeParseJSON(data.content?.find(c=>c.type==='text')?.text||'{}');
     result.ts=new Date().toLocaleTimeString('en-SG',{hour:'2-digit',minute:'2-digit'});result.price=currPrice;
     t.monitorResult=result;saveTrades();monEl.innerHTML=renderMonitorHTML(result);
-  }catch(e){monEl.innerHTML=`<div style="padding:10px;font-size:11px;color:var(--red)">⚠ ${e.message}</div>`;}
+  }catch(e){monEl.innerHTML=`<div style="padding:12px;font-size:11px;color:var(--red);line-height:1.6">⚠ Monitor failed: ${e.message}<br><button onclick="monitorTrade('${tradeId}')" style="margin-top:8px;padding:6px 14px;background:var(--rd);border:1px solid var(--red);color:var(--red);border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">↻ Retry</button></div>`;}
 }
 
 function renderMonitorHTML(r){
@@ -1882,8 +1903,8 @@ function renderMonitorHTML(r){
 // ═══════════════════════════════════════════════════
 // LAYER 4 — POST-TRADE DEBRIEF
 // ═══════════════════════════════════════════════════
-const DEBRIEF_SYSTEM=`You are a senior crypto derivatives trader conducting a post-trade debrief. Be honest. If the trade was poorly taken, say so. Focus on process, not just outcome. Respond ONLY with valid JSON.
-JSON schema:{"process_score":<1-10>,"outcome_analysis":"<2 sentences>","weakest_factor":"<signal factor most suspect at entry>","what_worked":"<one sentence>","learning":"<one specific actionable learning>","pattern_flag":"<null or pattern string e.g. 'No MSB + Normal session = avoid'>","process_verdict":"GOOD_PROCESS"|"ACCEPTABLE_PROCESS"|"POOR_PROCESS"}`;
+const DEBRIEF_SYSTEM=`You are a senior crypto derivatives trader conducting a post-trade debrief. Be honest. If the trade was poorly taken, say so. Focus on process, not just outcome. You MUST respond with ONLY a raw JSON object. No markdown, no asterisks, no bullet points, no backticks, no preamble. Start your response with { and end with }. Use plain text inside string values only.
+JSON schema:{"process_score":<1-10>,"outcome_analysis":"<2 sentences plain text>","weakest_factor":"<signal factor most suspect at entry>","what_worked":"<one sentence>","learning":"<one specific actionable learning>","pattern_flag":"<null or pattern string>","process_verdict":"GOOD_PROCESS"|"ACCEPTABLE_PROCESS"|"POOR_PROCESS"}`;
 
 async function debriefTrade(tradeId){
   if(!apiKey){showToast('⚠ Add API key in Settings');return;}
@@ -1897,10 +1918,10 @@ async function debriefTrade(tradeId){
     const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:500,system:DEBRIEF_SYSTEM,messages:[{role:'user',content:prompt}]})});
     if(!resp.ok)throw new Error(`API ${resp.status}`);
     const data=await resp.json();
-    const result=JSON.parse((data.content?.find(c=>c.type==='text')?.text||'{}').replace(/```json|```/g,'').trim());
+    const result=safeParseJSON(data.content?.find(c=>c.type==='text')?.text||'{}');
     result.ts=new Date().toLocaleTimeString('en-SG',{hour:'2-digit',minute:'2-digit'});
     t.debriefResult=result;saveTrades();debEl.innerHTML=renderDebriefHTML(result);
-  }catch(e){debEl.innerHTML=`<div style="padding:10px;font-size:11px;color:var(--red)">⚠ ${e.message}</div>`;}
+  }catch(e){debEl.innerHTML=`<div style="padding:12px;font-size:11px;color:var(--red);line-height:1.6">⚠ Debrief failed: ${e.message}<br><button onclick="debriefTrade('${tradeId}')" style="margin-top:8px;padding:6px 14px;background:var(--rd);border:1px solid var(--red);color:var(--red);border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">↻ Retry</button></div>`;}
 }
 
 function renderDebriefHTML(r){
@@ -2087,7 +2108,7 @@ async function generateWeeklyReview(){
     const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:900,system:WEEKLY_SYSTEM,messages:[{role:'user',content:prompt}]})});
     if(!resp.ok)throw new Error(`API ${resp.status}`);
     const data=await resp.json();
-    const result=JSON.parse((data.content?.find(c=>c.type==='text')?.text||'{}').replace(/```json|```/g,'').trim());
+    const result=safeParseJSON(data.content?.find(c=>c.type==='text')?.text||'{}');
     const ts=new Date().toLocaleString('en-SG',{weekday:'short',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
     localStorage.setItem('edge_weekly_report',JSON.stringify(result));localStorage.setItem('edge_weekly_ts',ts);
     renderWeeklySection();
