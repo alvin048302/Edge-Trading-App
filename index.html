@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>EDGE v10</title>
+<title>EDGE v12</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
 <style>
@@ -432,13 +432,112 @@ textarea.fi{resize:none;height:64px;line-height:1.55;font-size:12px}
 ::-webkit-scrollbar{width:3px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--bdr2);border-radius:2px}
+/* ── MACRO TAB ── */
+.macro-run-btn{width:100%;padding:14px;background:var(--txt);color:#fff;border:none;border-radius:11px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;margin-bottom:12px;letter-spacing:.02em}
+.macro-run-btn:active{opacity:.85}
+.macro-run-btn.loading{opacity:.6;pointer-events:none}
+.macro-cache-note{font-family:'DM Mono',monospace;font-size:10px;color:var(--dim);text-align:center;margin-bottom:14px}
+.macro-report{background:var(--bg1);border:1px solid var(--bdr);border-radius:13px;overflow:hidden;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.mr-banner{background:var(--txt);color:#fff;padding:14px 16px 12px}
+.mr-banner-title{font-family:'DM Mono',monospace;font-size:11px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;opacity:.7;margin-bottom:4px}
+.mr-banner-headline{font-size:16px;font-weight:700;line-height:1.3;margin-bottom:8px}
+.mr-banner-meta{display:flex;align-items:center;gap:10px;font-family:'DM Mono',monospace;font-size:10px;opacity:.6}
+.mr-sentiment{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--bdr);border-bottom:1px solid var(--bdr)}
+.mr-sent-item{background:var(--bg1);padding:11px 10px;text-align:center}
+.mr-sent-lbl{font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);margin-bottom:4px}
+.mr-sent-val{font-family:'DM Mono',monospace;font-size:13px;font-weight:700}
+.mr-body{padding:14px 15px}
+.mr-section{margin-bottom:16px}
+.mr-section:last-child{margin-bottom:0}
+.mr-sec-lbl{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.mr-sec-lbl::after{content:'';flex:1;height:1px;background:var(--bdr)}
+.mr-text{font-size:12px;color:var(--txt2);line-height:1.75}
+.mr-event{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--bdr)}
+.mr-event:last-child{border-bottom:none}
+.mr-event-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.dot-high{background:var(--red)}
+.dot-med{background:var(--amb)}
+.dot-low{background:var(--grn)}
+.mr-event-txt{flex:1}
+.mr-event-title{font-size:12px;font-weight:600;color:var(--txt);margin-bottom:2px}
+.mr-event-desc{font-size:11px;color:var(--mut);line-height:1.5}
+.mr-asset-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mr-asset-item{background:var(--bg2);border-radius:8px;padding:10px 11px}
+.mr-asset-name{font-family:'DM Mono',monospace;font-size:11px;font-weight:700;color:var(--txt);margin-bottom:3px}
+.mr-asset-bias{font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;display:inline-block;margin-bottom:5px}
+.bias-long{background:var(--gd2);color:var(--grn)}
+.bias-short{background:var(--rd);color:var(--red)}
+.bias-neutral{background:var(--bg3);color:var(--mut)}
+.mr-asset-reason{font-size:10px;color:var(--mut);line-height:1.5}
+.mr-links{display:flex;flex-direction:column;gap:7px}
+.mr-link-item{display:flex;align-items:flex-start;gap:9px;padding:9px 11px;background:var(--bg2);border-radius:8px;text-decoration:none}
+.mr-link-icon{font-size:14px;flex-shrink:0;margin-top:1px}
+.mr-link-body{flex:1;min-width:0}
+.mr-link-title{font-size:12px;font-weight:600;color:var(--txt);margin-bottom:2px;line-height:1.4}
+.mr-link-src{font-family:'DM Mono',monospace;font-size:10px;color:var(--mut)}
+.mr-link-url{font-size:10px;color:var(--blu);word-break:break-all;margin-top:2px}
+.mr-footer{padding:9px 15px;border-top:1px solid var(--bdr);background:var(--bg2);display:flex;align-items:center;justify-content:space-between}
+.mr-footer-ts{font-family:'DM Mono',monospace;font-size:9px;color:var(--dim)}
+.mr-refresh-btn{font-family:'DM Mono',monospace;font-size:10px;font-weight:600;color:var(--mut);background:none;border:none;cursor:pointer;padding:3px 6px}
+.mr-refresh-btn:active{color:var(--txt)}
+.macro-empty{text-align:center;padding:50px 20px}
+.macro-empty-icon{font-size:36px;margin-bottom:12px}
+.macro-empty-title{font-size:16px;font-weight:700;color:var(--txt);margin-bottom:6px}
+.macro-empty-sub{font-size:13px;color:var(--mut);line-height:1.6}
+/* ── BREAKING NEWS MONITOR ── */
+.news-monitor-btn{width:100%;padding:12px;background:#fff;border:1.5px solid var(--bdr2);color:var(--txt);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:all .15s;margin-bottom:10px}
+.news-monitor-btn:active{border-color:var(--txt);background:var(--bg2)}
+.news-monitor-btn.loading{opacity:.6;pointer-events:none}
+.news-monitor-btn.danger{border-color:var(--red);background:var(--rd);color:var(--red)}
+.news-report{background:var(--bg1);border:1.5px solid var(--bdr);border-radius:11px;overflow:hidden;margin-bottom:10px}
+.nr-hdr{padding:11px 13px 9px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between}
+.nr-title{font-family:'DM Mono',monospace;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--mut)}
+.nr-ts{font-family:'DM Mono',monospace;font-size:9px;color:var(--dim)}
+.nr-risk-badge{font-family:'DM Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.08em;padding:3px 9px;border-radius:20px}
+.nr-high{background:var(--rd);color:var(--red)}
+.nr-med{background:var(--ad);color:var(--amb)}
+.nr-low{background:var(--gd);color:var(--grn)}
+.nr-body{padding:12px 13px}
+.nr-summary{font-size:12px;color:var(--txt2);line-height:1.7;margin-bottom:10px}
+.nr-item{display:flex;gap:9px;padding:8px 0;border-bottom:1px solid var(--bdr)}
+.nr-item:last-child{border-bottom:none}
+.nr-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.nr-item-body{flex:1}
+.nr-item-title{font-size:12px;font-weight:600;color:var(--txt);margin-bottom:2px}
+.nr-item-detail{font-size:11px;color:var(--mut);line-height:1.5}
+.nr-action{margin-top:10px;padding:10px 12px;border-radius:8px;font-size:12px;line-height:1.6;font-weight:500}
+.nr-action-danger{background:var(--rd);border:1px solid rgba(220,38,38,.25);color:var(--red)}
+.nr-action-warn{background:var(--ad);border:1px solid rgba(217,119,6,.25);color:var(--amb)}
+.nr-action-ok{background:var(--gd);border:1px solid rgba(5,150,105,.2);color:var(--grn)}
+
+/* ── POSITION RISK FLAG ── */
+.risk-flag-card{border-radius:11px;overflow:hidden;margin-bottom:10px;border:1.5px solid}
+.rf-danger{border-color:var(--red);background:var(--bg1)}
+.rf-warn{border-color:var(--amb);background:var(--bg1)}
+.rf-hdr{padding:11px 13px 10px;display:flex;align-items:flex-start;gap:10px;border-bottom:1px solid var(--bdr)}
+.rf-icon{font-size:18px;flex-shrink:0;margin-top:1px}
+.rf-hdr-body{flex:1}
+.rf-title{font-size:13px;font-weight:700;margin-bottom:3px}
+.rf-title.danger{color:var(--red)}
+.rf-title.warn{color:var(--amb)}
+.rf-sub{font-size:11px;color:var(--mut);line-height:1.5}
+.rf-trades{padding:10px 13px}
+.rf-trade-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bdr)}
+.rf-trade-row:last-child{border-bottom:none}
+.rf-trade-left{display:flex;align-items:center;gap:7px}
+.rf-trade-asset{font-family:'DM Mono',monospace;font-size:13px;font-weight:700;color:var(--txt)}
+.rf-trade-dir{font-size:9px;font-weight:700;padding:2px 7px;border-radius:4px}
+.rf-trade-risk{font-size:11px;color:var(--mut)}
+.rf-trade-action{font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;border:none;cursor:pointer}
+.rf-close-btn{background:var(--rd);color:var(--red)}
+.rf-watch-btn{background:var(--ad);color:var(--amb)}
 </style>
 </head>
 <body>
 <div id="app">
 
 <div class="hdr">
-  <div class="logo">EDGE<small>v10 · Audited</small></div>
+  <div class="logo">EDGE<small>v12 · News Guard</small></div>
   <div class="hdr-r">
     <span class="sess-pill" id="sessPill">—</span>
     <button class="icon-btn" onclick="doRefreshMkt()" title="Refresh">↻</button>
@@ -453,6 +552,28 @@ textarea.fi{resize:none;height:64px;line-height:1.55;font-size:12px}
     <div class="wrow" id="watchRow"></div>
     <div class="lupd" id="lastUpd">—</div>
     <div id="mktContent"><div class="loading"><div class="spin"></div>Fetching Hyperliquid...</div></div>
+  </div>
+
+  <!-- MACRO -->
+  <div class="tab" id="tab-macro">
+    <button class="macro-run-btn" id="macroBtn" onclick="runMacroAnalysis()">
+      🌐 Analyse Macro Environment
+    </button>
+    <div class="macro-cache-note" id="macroCacheNote"></div>
+
+    <!-- BREAKING NEWS MONITOR -->
+    <button class="news-monitor-btn" id="newsBtn" onclick="runNewsMonitor()">
+      📡 Check Breaking News (Last 2H)
+    </button>
+    <div id="newsContent"></div>
+
+    <div id="macroContent">
+      <div class="macro-empty">
+        <div class="macro-empty-icon">🌐</div>
+        <div class="macro-empty-title">Macro Environment</div>
+        <div class="macro-empty-sub">Tap the button above to generate a<br>real-time macro analysis report.<br><br>Covers Fed policy · Risk sentiment<br>Crypto flows · Key events this week<br>Asset-level directional bias</div>
+      </div>
+    </div>
   </div>
 
   <!-- SIGNALS -->
@@ -566,7 +687,7 @@ textarea.fi{resize:none;height:64px;line-height:1.55;font-size:12px}
   </div>
 
   <!-- JOURNAL -->
-  <div class="tab" id="tab-journal"><div id="journalContent"></div></div>
+  <div class="tab" id="tab-journal"><div id="posRiskFlag"></div><div id="journalContent"></div></div>
 
   <!-- STATS -->
   <div class="tab" id="tab-stats">
@@ -625,6 +746,9 @@ textarea.fi{resize:none;height:64px;line-height:1.55;font-size:12px}
 <nav class="nav">
   <button class="nb active" id="nb-market" onclick="goTab('market')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Market
+  </button>
+  <button class="nb" id="nb-macro" onclick="goTab('macro')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>Macro
   </button>
   <button class="nb" id="nb-signals" onclick="goTab('signals')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Signals
@@ -701,10 +825,11 @@ function goTab(n){
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
   document.getElementById('tab-'+n).classList.add('active');
   document.getElementById('nb-'+n).classList.add('active');
-  if(n==='journal')renderJournal();
+  if(n==='journal'){renderJournal();checkPositionRisk();}
   if(n==='stats')renderStats();
   if(n==='plan')onAssetChange();
   if(n==='settings'){renderApiStatus();renderAiAccStats();}
+  if(n==='macro')renderMacroTab();
 }
 
 // ═══════════════════════════════════════════════════
@@ -1031,6 +1156,8 @@ async function runScan(){
 
     renderSignals();
     updateSigBadge(results.filter(s=>(s.tier==='strong'||s.tier==='moderate')&&!s.disqualified).length);
+    // Check open position risk against latest signal directions
+    checkPositionRisk();
   }catch(e){
     document.getElementById('sigContent').innerHTML=`<div class="empty"><div class="empty-icon">⚠</div><div class="empty-txt">Scan failed: ${e.message}</div></div>`;
   }
@@ -2141,6 +2268,457 @@ function renderWeeklyHTML(r,ts){
     <div class="wr-ts">Generated ${ts||'—'}</div>
   </div>`;
 }
+// ═══════════════════════════════════════════════════
+// MACRO ANALYSIS ENGINE
+// ═══════════════════════════════════════════════════
+const MACRO_CACHE_KEY  = 'edge_macro_report';
+const MACRO_TS_KEY     = 'edge_macro_ts';
+const MACRO_CACHE_HOURS = 24;
+
+const MACRO_SYSTEM = `You are a macro analyst and crypto market strategist. Your job is to analyse the current macro environment and its direct impact on crypto markets, specifically BTC, ETH, SOL, HYPE, and AVAX perpetual futures on Hyperliquid.
+
+Use your web search tool to find the most current data before writing your report. Search for: current Fed stance and rate expectations, US Dollar index (DXY), latest CPI/NFP data, crypto ETF flows, BTC dominance, risk sentiment indicators (VIX, equity markets), and any major market-moving news from the past 48 hours.
+
+After searching, produce a structured JSON report. You MUST respond with ONLY a valid JSON object. No markdown, no backticks, no preamble. Start with { and end with }.
+
+JSON schema:
+{
+  "headline": "<one sharp sentence summarising the macro regime right now>",
+  "regime": "RISK_ON" | "RISK_OFF" | "NEUTRAL" | "UNCERTAIN",
+  "crypto_bias": "BULLISH" | "BEARISH" | "NEUTRAL",
+  "sentiment_indicators": {
+    "fed_stance": "<1 sentence: current Fed posture>",
+    "dxy": "<DXY level and direction>",
+    "risk_sentiment": "<VIX / equity market read>"
+  },
+  "macro_summary": "<3-4 sentences covering the key macro forces in play right now and how they affect crypto>",
+  "key_events": [
+    {"title": "<event name>", "description": "<what happened and why it matters for crypto>", "impact": "HIGH" | "MEDIUM" | "LOW"},
+    {"title": "...", "description": "...", "impact": "..."}
+  ],
+  "asset_bias": [
+    {"asset": "BTC", "bias": "LONG" | "SHORT" | "NEUTRAL", "reason": "<one sentence>"},
+    {"asset": "ETH", "bias": "LONG" | "SHORT" | "NEUTRAL", "reason": "<one sentence>"},
+    {"asset": "SOL", "bias": "LONG" | "SHORT" | "NEUTRAL", "reason": "<one sentence>"},
+    {"asset": "HYPE", "bias": "LONG" | "SHORT" | "NEUTRAL", "reason": "<one sentence>"},
+    {"asset": "AVAX", "bias": "LONG" | "SHORT" | "NEUTRAL", "reason": "<one sentence>"}
+  ],
+  "links": [
+    {"title": "<article or source title>", "source": "<publication name>", "url": "<full URL>", "relevance": "<why this matters>"},
+    {"title": "...", "source": "...", "url": "...", "relevance": "..."}
+  ],
+  "watch_this_week": "<1-2 sentences: most important scheduled events or data releases in the coming days>"
+}`;
+
+function renderMacroTab(){
+  const stored = localStorage.getItem(MACRO_CACHE_KEY);
+  const ts     = localStorage.getItem(MACRO_TS_KEY);
+  const noteEl = document.getElementById('macroCacheNote');
+
+  if(stored && ts){
+    const ageH = (Date.now() - parseInt(ts)) / 3600000;
+    const fresh = ageH < MACRO_CACHE_HOURS;
+    const ageLabel = ageH < 1 ? 'Just now' : ageH < 24 ? `${Math.round(ageH)}h ago` : `${Math.round(ageH/24)}d ago`;
+    noteEl.textContent = fresh
+      ? `Report from ${ageLabel} · Next refresh in ${Math.round(MACRO_CACHE_HOURS - ageH)}h`
+      : `Report from ${ageLabel} · Cache expired — tap to refresh`;
+    document.getElementById('macroBtn').textContent = '🔄 Refresh Macro Analysis';
+    try{
+      renderMacroReport(JSON.parse(stored), new Date(parseInt(ts)).toLocaleString('en-SG',{weekday:'short',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}));
+    }catch(e){}
+  } else {
+    noteEl.textContent = 'Powered by Claude with live web search · ~$0.03 per report';
+    document.getElementById('macroBtn').textContent = '🌐 Analyse Macro Environment';
+  }
+}
+
+async function runMacroAnalysis(){
+  if(!apiKey){showToast('⚠ Add API key in Settings first');goTab('settings');return;}
+
+  // Check cache — only bypass if expired
+  const stored = localStorage.getItem(MACRO_CACHE_KEY);
+  const ts     = localStorage.getItem(MACRO_TS_KEY);
+  if(stored && ts){
+    const ageH = (Date.now() - parseInt(ts)) / 3600000;
+    if(ageH < MACRO_CACHE_HOURS){
+      showToast(`Using cached report (${Math.round(ageH)}h old)`);
+      renderMacroTab();
+      return;
+    }
+  }
+
+  const btn = document.getElementById('macroBtn');
+  btn.classList.add('loading');
+  btn.innerHTML = '<span class="ai-spin" style="color:#fff"></span> Searching markets...';
+  document.getElementById('macroContent').innerHTML =
+    `<div class="scanning-msg"><div class="spin"></div><div class="scan-prog">
+      <div class="act">🔍 Searching macro news...</div>
+      <div class="act">📈 Fetching rate & DXY data...</div>
+      <div class="act">₿ Analysing crypto flows...</div>
+      <div class="act">📋 Generating report...</div>
+    </div></div>`;
+  document.getElementById('macroCacheNote').textContent = 'Running live web search via Claude...';
+
+  try{
+    const resp = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key':apiKey,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 2000,
+        tools:[{type:'web_search_20250305',name:'web_search'}],
+        system: MACRO_SYSTEM,
+        messages:[{role:'user',content:`Analyse the current macro environment and its impact on crypto markets. Today's date is ${new Date().toLocaleDateString('en-SG',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}. Search for the latest data and produce the JSON report.`}]
+      })
+    });
+
+    if(!resp.ok){
+      const err = await resp.json().catch(()=>({}));
+      throw new Error(err?.error?.message || `API error ${resp.status}`);
+    }
+
+    const data = await resp.json();
+    // Extract final text block (after tool use)
+    const textBlock = [...(data.content||[])].reverse().find(c=>c.type==='text');
+    if(!textBlock?.text) throw new Error('No report returned');
+
+    const report = safeParseJSON(textBlock.text);
+    if(!report.headline) throw new Error('Invalid report structure — try again');
+
+    const nowTs = Date.now().toString();
+    localStorage.setItem(MACRO_CACHE_KEY, JSON.stringify(report));
+    localStorage.setItem(MACRO_TS_KEY, nowTs);
+
+    const tsLabel = new Date().toLocaleString('en-SG',{weekday:'short',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+    renderMacroReport(report, tsLabel);
+    document.getElementById('macroCacheNote').textContent = `Generated ${tsLabel} · Next refresh in ${MACRO_CACHE_HOURS}h`;
+    document.getElementById('macroBtn').textContent = '🔄 Refresh Macro Analysis';
+
+  }catch(e){
+    document.getElementById('macroContent').innerHTML =
+      `<div class="macro-empty"><div class="macro-empty-icon">⚠</div><div class="macro-empty-title">Analysis Failed</div><div class="macro-empty-sub">${e.message}</div></div>`;
+    document.getElementById('macroCacheNote').textContent = 'Tap to retry';
+  }
+
+  btn.classList.remove('loading');
+  btn.innerHTML = '🔄 Refresh Macro Analysis';
+}
+
+function renderMacroReport(r, ts){
+  const el = document.getElementById('macroContent');
+  if(!r || !r.headline){ el.innerHTML = '<div class="macro-empty"><div class="macro-empty-icon">⚠</div><div class="macro-empty-sub">Report data incomplete — tap Refresh.</div></div>'; return; }
+
+  const regimeColor = {RISK_ON:'var(--grn)',RISK_OFF:'var(--red)',NEUTRAL:'var(--mut)',UNCERTAIN:'var(--amb)'}[r.regime]||'var(--mut)';
+  const biasColor   = {BULLISH:'var(--grn)',BEARISH:'var(--red)',NEUTRAL:'var(--mut)'}[r.crypto_bias]||'var(--mut)';
+
+  const si = r.sentiment_indicators || {};
+  const sentHTML = `
+    <div class="mr-sent-item"><div class="mr-sent-lbl">Fed</div><div class="mr-sent-val" style="font-size:11px;color:var(--txt2)">${si.fed_stance||'—'}</div></div>
+    <div class="mr-sent-item"><div class="mr-sent-lbl">DXY</div><div class="mr-sent-val" style="font-size:11px;color:var(--txt2)">${si.dxy||'—'}</div></div>
+    <div class="mr-sent-item"><div class="mr-sent-lbl">Risk</div><div class="mr-sent-val" style="font-size:11px;color:var(--txt2)">${si.risk_sentiment||'—'}</div></div>`;
+
+  const eventsHTML = (r.key_events||[]).map(e=>{
+    const dc = {HIGH:'dot-high',MEDIUM:'dot-med',LOW:'dot-low'}[e.impact]||'dot-low';
+    return `<div class="mr-event">
+      <div class="mr-event-dot ${dc}"></div>
+      <div class="mr-event-txt">
+        <div class="mr-event-title">${e.title||''}</div>
+        <div class="mr-event-desc">${e.description||''}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  const assetsHTML = (r.asset_bias||[]).map(a=>{
+    const bc = {LONG:'bias-long',SHORT:'bias-short',NEUTRAL:'bias-neutral'}[a.bias]||'bias-neutral';
+    return `<div class="mr-asset-item">
+      <div class="mr-asset-name">${a.asset}</div>
+      <div class="mr-asset-bias ${bc}">${a.bias||'—'}</div>
+      <div class="mr-asset-reason">${a.reason||''}</div>
+    </div>`;
+  }).join('');
+
+  const linksHTML = (r.links||[]).slice(0,5).map(l=>`
+    <a class="mr-link-item" href="${l.url||'#'}" target="_blank" rel="noopener">
+      <div class="mr-link-icon">🔗</div>
+      <div class="mr-link-body">
+        <div class="mr-link-title">${l.title||'—'}</div>
+        <div class="mr-link-src">${l.source||''}</div>
+        <div class="mr-link-url">${l.url||''}</div>
+      </div>
+    </a>`).join('');
+
+  el.innerHTML = `<div class="macro-report">
+    <div class="mr-banner">
+      <div class="mr-banner-title">Macro Environment</div>
+      <div class="mr-banner-headline">${r.headline}</div>
+      <div class="mr-banner-meta">
+        <span style="background:${regimeColor};color:#fff;padding:2px 8px;border-radius:4px;font-size:9px;font-weight:700;letter-spacing:.08em">${r.regime||'—'}</span>
+        <span style="background:${biasColor};color:#fff;padding:2px 8px;border-radius:4px;font-size:9px;font-weight:700;letter-spacing:.08em">CRYPTO ${r.crypto_bias||'—'}</span>
+      </div>
+    </div>
+
+    <div class="mr-sentiment">${sentHTML}</div>
+
+    <div class="mr-body">
+      <div class="mr-section">
+        <div class="mr-sec-lbl">Macro Summary</div>
+        <div class="mr-text">${r.macro_summary||'—'}</div>
+      </div>
+
+      ${eventsHTML?`<div class="mr-section">
+        <div class="mr-sec-lbl">Key Events</div>
+        ${eventsHTML}
+      </div>`:''}
+
+      ${assetsHTML?`<div class="mr-section">
+        <div class="mr-sec-lbl">Asset Bias</div>
+        <div class="mr-asset-grid">${assetsHTML}</div>
+      </div>`:''}
+
+      ${r.watch_this_week?`<div class="mr-section">
+        <div class="mr-sec-lbl">Watch This Week</div>
+        <div class="mr-text" style="background:var(--ad);border-left:3px solid var(--amb);padding:10px 12px;border-radius:0 7px 7px 0">${r.watch_this_week}</div>
+      </div>`:''}
+
+      ${linksHTML?`<div class="mr-section">
+        <div class="mr-sec-lbl">Sources</div>
+        <div class="mr-links">${linksHTML}</div>
+      </div>`:''}
+    </div>
+
+    <div class="mr-footer">
+      <span class="mr-footer-ts">Generated ${ts||'—'} · claude-sonnet-4 + web search</span>
+      <button class="mr-refresh-btn" onclick="forceRefreshMacro()">↻ Refresh</button>
+    </div>
+  </div>
+  <div style="height:20px"></div>`;
+}
+
+function forceRefreshMacro(){
+  localStorage.removeItem(MACRO_CACHE_KEY);
+  localStorage.removeItem(MACRO_TS_KEY);
+  runMacroAnalysis();
+}
+
+// ═══════════════════════════════════════════════════
+// BREAKING NEWS MONITOR
+// ═══════════════════════════════════════════════════
+const NEWS_SYSTEM=`You are a real-time market risk analyst monitoring news that could impact open crypto perpetual futures positions on Hyperliquid. Search for breaking news and statements from the last 2 hours that could cause sudden price moves in BTC, ETH, SOL, HYPE, or AVAX.
+
+Focus specifically on: Trump statements about crypto/Iran/trade, Fed speaker comments, major geopolitical developments, sudden regulatory news, large liquidation events, or any surprise macro data.
+
+You MUST respond with ONLY a valid JSON object. No markdown, no backticks. Start with { end with }.
+
+JSON schema:
+{
+  "overall_risk": "HIGH"|"MEDIUM"|"LOW",
+  "summary": "<2 sentences: what is the most important thing happening right now>",
+  "items": [
+    {"title":"<event>","detail":"<what happened and immediate price impact for crypto>","impact":"HIGH"|"MEDIUM"|"LOW","direction_risk":"LONG"|"SHORT"|"BOTH"|"NONE"}
+  ],
+  "recommended_action": "<one clear sentence: what a trader with open positions should do right now>",
+  "safe_to_hold": true|false
+}`;
+
+async function runNewsMonitor(){
+  if(!apiKey){showToast('⚠ Add API key in Settings first');goTab('settings');return;}
+  const btn=document.getElementById('newsBtn');
+  btn.classList.add('loading');
+  btn.innerHTML='<span class="ai-spin" style="color:var(--txt)"></span> Scanning news...';
+  document.getElementById('newsContent').innerHTML=
+    `<div class="loading-inline"><div class="spin" style="border-top-color:var(--txt)"></div>Searching last 2 hours...</div>`;
+
+  // Build context from open trades
+  const open=trades.filter(t=>t.status==='OPEN');
+  const posContext=open.length
+    ? `Open positions: ${open.map(t=>`${t.asset} ${t.direction} (entry ${fmtP(t.entry)}, SL ${fmtP(t.stop)})`).join(', ')}`
+    : 'No open positions — general market monitoring only.';
+
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:800,
+        tools:[{type:'web_search_20250305',name:'web_search'}],
+        system:NEWS_SYSTEM,
+        messages:[{role:'user',content:`Check for breaking news in the last 2 hours that could impact crypto markets. Today: ${new Date().toLocaleString('en-SG')}. ${posContext}. Search for Trump crypto/Iran/trade statements, Fed speakers, major market events, and any sudden crypto-specific news. Produce the JSON risk report.`}]
+      })
+    });
+    if(!resp.ok){const err=await resp.json().catch(()=>({}));throw new Error(err?.error?.message||`API ${resp.status}`);}
+    const data=await resp.json();
+    const textBlock=[...(data.content||[])].reverse().find(c=>c.type==='text');
+    if(!textBlock?.text)throw new Error('No response');
+    const report=safeParseJSON(textBlock.text);
+    if(!report.overall_risk)throw new Error('Invalid response — retry');
+    renderNewsReport(report);
+    // Update button state based on risk level
+    btn.classList.remove('loading');
+    if(report.overall_risk==='HIGH'){
+      btn.className='news-monitor-btn danger';
+      btn.innerHTML='🚨 HIGH RISK — Tap to re-check';
+    } else {
+      btn.className='news-monitor-btn';
+      btn.innerHTML=`📡 ${report.overall_risk==='MEDIUM'?'⚠ Medium Risk':'✓ Low Risk'} — Re-check News`;
+    }
+  }catch(e){
+    document.getElementById('newsContent').innerHTML=
+      `<div style="padding:10px;font-size:11px;color:var(--red)">⚠ News check failed: ${e.message}<br><button onclick="runNewsMonitor()" style="margin-top:8px;padding:5px 12px;background:var(--bg2);border:1px solid var(--bdr2);border-radius:6px;font-size:11px;cursor:pointer">↻ Retry</button></div>`;
+    btn.classList.remove('loading');
+    btn.innerHTML='📡 Check Breaking News (Last 2H)';
+  }
+}
+
+function renderNewsReport(r){
+  const el=document.getElementById('newsContent');
+  if(!r)return;
+  const rc={HIGH:'nr-high',MEDIUM:'nr-med',LOW:'nr-low'}[r.overall_risk]||'nr-low';
+  const ac=r.safe_to_hold===false?'nr-action-danger':r.overall_risk==='MEDIUM'?'nr-action-warn':'nr-action-ok';
+  const ts=new Date().toLocaleTimeString('en-SG',{hour:'2-digit',minute:'2-digit'});
+  const itemsHTML=(r.items||[]).map(item=>{
+    const dc={HIGH:'dot-high',MEDIUM:'dot-med',LOW:'dot-low'}[item.impact]||'dot-low';
+    const dirTag=item.direction_risk!=='NONE'&&item.direction_risk
+      ?`<span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:3px;margin-left:5px;background:${item.direction_risk==='LONG'?'var(--rd)':item.direction_risk==='SHORT'?'var(--rd)':'var(--ad)'};color:${item.direction_risk==='LONG'?'var(--red)':item.direction_risk==='SHORT'?'var(--red)':'var(--amb)'}">⚠ ${item.direction_risk} risk</span>`:'';
+    return`<div class="nr-item">
+      <div class="nr-dot ${dc}"></div>
+      <div class="nr-item-body">
+        <div class="nr-item-title">${item.title||''}${dirTag}</div>
+        <div class="nr-item-detail">${item.detail||''}</div>
+      </div>
+    </div>`;
+  }).join('');
+  el.innerHTML=`<div class="news-report">
+    <div class="nr-hdr">
+      <div><div class="nr-title">Breaking News Monitor</div><div class="nr-ts">Last checked ${ts}</div></div>
+      <span class="nr-risk-badge ${rc}">${r.overall_risk} RISK</span>
+    </div>
+    <div class="nr-body">
+      <div class="nr-summary">${r.summary||'—'}</div>
+      ${itemsHTML}
+      ${r.recommended_action?`<div class="nr-action ${ac}">→ ${r.recommended_action}</div>`:''}
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════
+// OPEN POSITION RISK FLAG
+// ═══════════════════════════════════════════════════
+function checkPositionRisk(){
+  const flagEl=document.getElementById('posRiskFlag');
+  if(!flagEl)return;
+  const open=trades.filter(t=>t.status==='OPEN');
+  if(!open.length){flagEl.innerHTML='';return;}
+
+  // Check each open trade against latest signal scan and macro data
+  const conflicts=[];
+  const warnings=[];
+
+  open.forEach(t=>{
+    // Check 1: Does latest signal for this asset conflict with trade direction?
+    const sig=signals.find(s=>s.asset===t.asset);
+    if(sig&&sig.direction&&sig.direction!==t.direction&&(sig.tier==='strong'||sig.tier==='moderate')&&!sig.disqualified){
+      conflicts.push({
+        trade:t,
+        reason:`Signal now ${sig.tier.toUpperCase()} ${sig.direction} — opposite to your ${t.direction}`,
+        severity:'danger'
+      });
+    }
+
+    // Check 2: ADX ranging — no trend to support the trade
+    if(sig&&sig.adx<CFG.ADX_TREND_MIN){
+      warnings.push({
+        trade:t,
+        reason:`${t.asset} now ranging (ADX ${sig.adx}) — no trend support for ${t.direction}`,
+        severity:'warn'
+      });
+    }
+
+    // Check 3: Funding rate flipped against position direction
+    const mktData=mkt[t.asset];
+    if(mktData){
+      const fundingAgainst=
+        (t.direction==='LONG'&&mktData.funding>CFG.FUND_EXTREME)||
+        (t.direction==='SHORT'&&mktData.funding<-CFG.FUND_EXTREME);
+      if(fundingAgainst){
+        warnings.push({
+          trade:t,
+          reason:`Extreme funding ${(mktData.funding*100).toFixed(3)}% — squeeze risk against ${t.direction}`,
+          severity:'warn'
+        });
+      }
+    }
+
+    // Check 4: Session risk — low liquidity with open position
+    if(getSession()==='low'){
+      warnings.push({
+        trade:t,
+        reason:'Low liquidity session — news gaps more likely',
+        severity:'warn'
+      });
+    }
+  });
+
+  // Deduplicate by trade id
+  const allFlags=[...conflicts,...warnings];
+  if(!allFlags.length){flagEl.innerHTML='';return;}
+
+  const hasDanger=conflicts.length>0;
+  const rfClass=hasDanger?'rf-danger':'rf-warn';
+  const titleClass=hasDanger?'danger':'warn';
+  const icon=hasDanger?'⛔':'⚠';
+  const title=hasDanger
+    ?`${conflicts.length} position${conflicts.length!==1?'s':''} in conflict with current signals`
+    :`${warnings.length} position risk warning${warnings.length!==1?'s':''}`;
+  const sub=hasDanger
+    ?"Signal direction has reversed since entry — review immediately"
+    :"Changed conditions detected — check before next session";
+
+  // Unique trades with flags
+  const flaggedTrades=[];
+  const seen=new Set();
+  allFlags.forEach(f=>{
+    if(!seen.has(f.trade.id)){
+      seen.add(f.trade.id);
+      const tradeFlags=allFlags.filter(x=>x.trade.id===f.trade.id);
+      flaggedTrades.push({trade:f.trade,flags:tradeFlags,severity:tradeFlags.some(x=>x.severity==='danger')?'danger':'warn'});
+    }
+  });
+
+  const rowsHTML=flaggedTrades.map(({trade:t,flags,severity})=>{
+    const dirClass=t.direction==='LONG'?'db-long':'db-short';
+    const btnClass=severity==='danger'?'rf-close-btn':'rf-watch-btn';
+    const btnLabel=severity==='danger'?'Review SL':'Monitor';
+    const flagText=flags.map(f=>`• ${f.reason}`).join('<br>');
+    return`<div class="rf-trade-row">
+      <div style="flex:1">
+        <div class="rf-trade-left" style="margin-bottom:4px">
+          <span class="rf-trade-asset">${t.asset}</span>
+          <span class="dir-b ${dirClass}">${t.direction}</span>
+          <span class="rf-trade-dir" style="font-size:9px;color:var(--mut)">E:${fmtP(t.entry)}</span>
+        </div>
+        <div style="font-size:10px;color:${severity==='danger'?'var(--red)':'var(--amb)'};line-height:1.5">${flagText}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  flagEl.innerHTML=`<div class="risk-flag-card ${rfClass}" style="margin:0 0 10px">
+    <div class="rf-hdr">
+      <div class="rf-icon">${icon}</div>
+      <div class="rf-hdr-body">
+        <div class="rf-title ${titleClass}">${title}</div>
+        <div class="rf-sub">${sub}</div>
+      </div>
+    </div>
+    <div class="rf-trades">${rowsHTML}</div>
+  </div>`;
+}
+
 function fmtP(p){if(!p&&p!==0)return'—';if(p>=10000)return p.toLocaleString('en',{maximumFractionDigits:0});if(p>=1000)return p.toLocaleString('en',{minimumFractionDigits:1,maximumFractionDigits:1});if(p>=1)return p.toFixed(3);return p.toFixed(5);}
 function fmtOI(v){if(!v)return'—';if(v>=1e9)return(v/1e9).toFixed(1)+'B';if(v>=1e6)return(v/1e6).toFixed(1)+'M';if(v>=1e3)return(v/1e3).toFixed(1)+'K';return v.toFixed(0);}
 function priceDp(p){return p>=10000?0:p>=1000?1:p>=1?3:5;}
@@ -2152,6 +2730,8 @@ buildCL();renderSession();fetchMkt();calcAll();
 setInterval(()=>{fetchMkt();renderSession();},60000);
 if(signals.length){renderSignals();updateSigBadge(signals.filter(s=>(s.tier==='strong'||s.tier==='moderate')&&!s.disqualified).length);}
 renderApiStatus();
+// Restore cached macro report if present
+if(localStorage.getItem(MACRO_CACHE_KEY))renderMacroTab();
 </script>
 </body>
 </html>
