@@ -3,9 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>EDGE v15</title>
+<title>EDGE v16</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 :root{
   --bg:#f5f6f8;--bg1:#ffffff;--bg2:#f0f1f4;--bg3:#e8eaee;
@@ -622,13 +623,18 @@ textarea.fi{resize:none;height:64px;line-height:1.55;font-size:12px}
 .sq-conf-bar{height:100%;border-radius:3px}
 .sq-conf-num{font-family:'DM Mono',monospace;font-size:10px;font-weight:600;width:32px;text-align:right;flex-shrink:0}
 .sq-why{font-size:10px;color:var(--mut);margin-top:5px;line-height:1.5;padding-top:5px;border-top:1px solid var(--bdr)}
+/* ── PDF DOWNLOAD ── */
+.pdf-btn{display:flex;align-items:center;justify-content:center;gap:7px;padding:11px 14px;background:var(--bg1);border:1.5px solid var(--bdr2);color:var(--txt);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;border-radius:9px;cursor:pointer;transition:all .15s;width:100%;margin-top:8px}
+.pdf-btn:active{border-color:var(--txt);background:var(--bg2)}
+.pdf-btn.loading{opacity:.55;pointer-events:none}
+.pdf-btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0}
 </style>
 </head>
 <body>
 <div id="app">
 
 <div class="hdr">
-  <div class="logo">EDGE<small>v15 · Audited Build</small></div>
+  <div class="logo">EDGE<small>v16 · Macro-Aware</small></div>
   <div class="hdr-r">
     <span class="sess-pill" id="sessPill">—</span>
     <button class="icon-btn" onclick="doRefreshMkt()" title="Refresh">↻</button>
@@ -657,6 +663,14 @@ textarea.fi{resize:none;height:64px;line-height:1.55;font-size:12px}
       📡 Check Breaking News (Last 2H)
     </button>
     <div id="newsContent"></div>
+
+    <!-- PDF DOWNLOAD -->
+    <div id="macroPdfBtn" style="display:none">
+      <button class="pdf-btn" onclick="downloadMacroPDF()">
+        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download Macro Report PDF
+      </button>
+    </div>
 
     <div id="macroContent">
       <div class="macro-empty">
@@ -782,6 +796,10 @@ textarea.fi{resize:none;height:64px;line-height:1.55;font-size:12px}
 
   <!-- STATS -->
   <div class="tab" id="tab-stats">
+    <button class="pdf-btn" onclick="downloadStatsPDF()" style="margin-bottom:10px">
+      <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Download Stats Report PDF
+    </button>
     <div id="weeklyReviewSection"></div>
     <div id="statsContent"></div>
   </div>
@@ -1369,6 +1387,9 @@ function renderSignals(){
     const barCol=s.disqualified?'var(--dim)':s.tier==='strong'?'var(--grn)':s.tier==='moderate'?'var(--amb)':s.tier==='watch'?'var(--blu)':'var(--dim)';
     const etL={breakout:'BREAKOUT',continuation:'CONTINUATION',meanrev:'MEAN-REV'}[s.entryType]||'';
     const etC={breakout:'et-breakout',continuation:'et-continuation',meanrev:'et-meanrev'}[s.entryType]||'';
+    // Macro alignment badge — pure JS, no API call
+    const macroAlign=getMacroAlignment(s.asset,s.direction);
+    const macroAlignBadge=macroAlign?`<span style="font-family:'DM Mono',monospace;font-size:8px;font-weight:700;padding:2px 7px;border-radius:4px;background:${macroAlign.status==='aligned'?'var(--gd2)':macroAlign.status==='conflict'?'var(--rd)':'var(--ad)'};color:${macroAlign.color}">${macroAlign.label}</span>`:'';
 
     // Check if already logged
     const alreadyLogged=trades.some(t=>t.sigAsset===s.asset&&t.observation&&t.status==='OPEN'&&t.sigScanned===s.scanned);
@@ -1431,6 +1452,7 @@ function renderSignals(){
             ${s.disqualified?'<span class="tier-b tb-disq">DISQ</span>':''}
             <span class="tier-b ${bc}">${tl}</span>
             <span class="dir-b ${s.direction==='LONG'?'db-long':'db-short'}">${s.direction||'—'}</span>
+            ${macroAlignBadge}
           </div>
         </div>
         <div class="sc-r2">
@@ -1910,11 +1932,52 @@ function sigFingerprint(s){
   return `${s.asset}_${s.direction}_${dateStr}_${s.scanned}_${s.score}`;
 }
 
+// Build macro context string from cached macro report
+function getMacroContext(asset){
+  const stored=localStorage.getItem(MACRO_CACHE_KEY);
+  const ts=localStorage.getItem(MACRO_TS_KEY);
+  if(!stored)return{text:'No macro data available — run Macro Analysis first.',fresh:false,regime:null,cryptoBias:null,assetBias:null,ageH:null};
+  try{
+    const m=JSON.parse(stored);
+    const ageH=ts?(Date.now()-parseInt(ts))/3600000:99;
+    const fresh=ageH<12;
+    const assetBiasEntry=(m.asset_bias||[]).find(a=>a.asset===asset);
+    const assetBias=assetBiasEntry?{bias:assetBiasEntry.bias,reason:assetBiasEntry.reason}:null;
+    // Build the macro section text
+    let text=`MACRO ENVIRONMENT (${fresh?`${ageH.toFixed(1)}h ago — FRESH`:`${ageH.toFixed(1)}h ago — STALE, treat with caution`})
+  Regime: ${m.regime||'UNKNOWN'}
+  Crypto Bias: ${m.crypto_bias||'UNKNOWN'}
+  Fed: ${m.sentiment_indicators?.fed_stance||'N/A'}
+  DXY: ${m.sentiment_indicators?.dxy||'N/A'}
+  Risk Sentiment: ${m.sentiment_indicators?.risk_sentiment||'N/A'}
+  Asset-Specific Bias for ${asset}: ${assetBias?assetBias.bias+' — '+assetBias.reason:'Not available'}
+  Watch This Week: ${m.watch_this_week||'N/A'}
+  Summary: ${m.macro_summary?.slice(0,300)||'N/A'}`;
+    return{text,fresh,regime:m.regime,cryptoBias:m.crypto_bias,assetBias:assetBias?.bias||null,ageH};
+  }catch(e){return{text:'Macro data parse error.',fresh:false,regime:null,cryptoBias:null,assetBias:null,ageH:null};}
+}
+
+// Compute macro alignment badge for signal card (pure JS, no API)
+function getMacroAlignment(asset,direction){
+  const stored=localStorage.getItem(MACRO_CACHE_KEY);
+  if(!stored)return null;
+  try{
+    const m=JSON.parse(stored);
+    const entry=(m.asset_bias||[]).find(a=>a.asset===asset);
+    if(!entry)return null;
+    const bias=entry.bias; // LONG/SHORT/NEUTRAL
+    if(bias==='NEUTRAL')return{status:'mixed',label:'⚠ Macro Neutral',color:'var(--amb)'};
+    if(bias===direction)return{status:'aligned',label:'✓ Macro Aligned',color:'var(--grn)'};
+    return{status:'conflict',label:'✗ Macro Conflict',color:'var(--red)'};
+  }catch(e){return null;}
+}
+
 function buildTradePrompt(s){
   const l1Txt=(s.l1||[]).map(f=>`  • ${f.label} [${f.pts>0?'+'+f.pts+'pts':'0pts'}]: ${f.detail}`).join('\n');
   const l2Txt=(s.l2||[]).map(f=>`  • ${f.label} [${f.pts>0?'+'+f.pts:'0'}pts]: ${f.detail}`).join('\n');
   const l3Txt=(s.l3||[]).map(f=>`  • ${f.label} [${f.pts>0?'+'+f.pts:'0'}pts]: ${f.detail}`).join('\n');
   const disqTxt=s.disqualifyReasons?.length?`DISQUALIFIERS FLAGGED:\n${s.disqualifyReasons.map(r=>`  ⚠ ${r}`).join('\n')}`:'No disqualifiers.';
+  const macro=getMacroContext(s.asset);
   return `TRADE SIGNAL BRIEF — ${s.asset}/USDT PERPETUAL on Hyperliquid
 Generated: ${s.scanned} | Session: ${s.sessionQ?.toUpperCase()||'UNKNOWN'}
 
@@ -1925,12 +1988,15 @@ SIGNAL ENGINE VERDICT
   Directional Conviction: ${(s.dirConv*100||0).toFixed(1)}%
   ADX: ${s.adx||'N/A'} (trending threshold: 22)
   Entry Type: ${s.entryType?.toUpperCase()||'UNKNOWN'}
+  Volatility Regime: ${s.volRegime?`${s.volRegime.toFixed(2)}× baseline (SL at ${s.slMult?.toFixed(2)}×ATR)`:'Baseline building'}
 
 MARKET CONTEXT
   Mark Price: ${fmtP(s.price)}
   Funding Rate: ${s.funding?(s.funding*100).toFixed(4)+'%':'N/A'} (annual: ${s.funding?(s.funding*24*365*100).toFixed(0)+'%':'N/A'})
   4H ATR-14: ${fmtP(s.atr)}
   4H EMA-20: ${fmtP(s.ema)}
+
+${macro.text}
 
 LAYER 1 — QUANTITATIVE FILTERS (${(s.l1||[]).reduce((a,f)=>a+f.pts,0)}/5 pts)
 ${l1Txt}
@@ -1945,42 +2011,56 @@ ${disqTxt}
 
 ATR-BASED LIMIT SETUP
   Entry: ${fmtP(s.entry)} (limit order, ${((s.entryPull||0)*100).toFixed(0)}×ATR pull from mark)
-  Stop Loss: ${fmtP(s.sl)} (${(CFG.ATR_SL)}×ATR from entry)
-  Take Profit: ${fmtP(s.tp)} (${(CFG.ATR_TP)}×ATR from entry)
-  R:R Ratio: ${(CFG.ATR_TP/CFG.ATR_SL).toFixed(1)}:1
+  Stop Loss: ${fmtP(s.sl)} (${s.slMult?.toFixed(2)||CFG.ATR_SL}×ATR from entry${s.slMult>CFG.ATR_SL?' — widened for elevated volatility':''})
+  Take Profit: ${fmtP(s.tp)} (${CFG.ATR_TP}×ATR from entry)
+  R:R Ratio: ${s.rr?.toFixed(1)||'2.0'}:1
 
 DIRECTION VOTE BREAKDOWN
   LONG: ${s.votes?.LONG||0} weighted pts
   SHORT: ${s.votes?.SHORT||0} weighted pts`;
 }
 
-const AI_SYSTEM_PROMPT=`You are a senior crypto derivatives trader with 7 years of experience trading perpetual futures on centralised and decentralised exchanges. You specialise in systematic discretionary trading — combining quantitative filters with candle structure analysis to identify high-probability setups.
+const AI_SYSTEM_PROMPT=`You are a senior crypto derivatives trader with 7 years of experience trading perpetual futures. You combine systematic technical analysis with macro awareness to filter high-probability setups.
 
-You are evaluating a trade signal generated by a multi-layer signal engine. Your job is to act as the final human filter: determine whether this setup has a genuine edge worth acting on.
+You are evaluating a trade signal. Your job is the final human filter — technical edge AND macro alignment must both support the trade.
 
-Your evaluation criteria:
-- TAKE: Clear edge present, directional conviction strong (≥65%), ADX trending, daily and 4H aligned, no major conflicts, R:R justified by setup quality. You are willing to trade this.
-- WATCH: Setup has merit but one key element is missing or weak. Worth monitoring for a better entry or confirmation. You would not trade this right now but would revisit.
-- SKIP: Insufficient edge, too many conflicts, ranging market, low conviction, or the risk/reward is not justified by actual signal quality. You would not trade this under current conditions.
+MACRO-ADJUSTED SCORING RULES (apply these before setting confidence):
+- If macro regime is RISK_ON and asset bias aligns with signal direction: confidence bonus +10
+- If macro regime is NEUTRAL: no adjustment
+- If macro regime is UNCERTAIN: confidence penalty -10, minimum threshold rises to 75
+- If macro regime is RISK_OFF: confidence penalty -25, minimum threshold rises to 80
+- If macro asset bias CONFLICTS with signal direction: additional -25 penalty
+- If macro asset bias ALIGNS with signal direction: additional +10 bonus
+- If macro data is stale (>12H): treat macro as NEUTRAL, note the staleness
 
-Confidence score (0–100):
-- 80–100: Exceptional setup, rare, high conviction
-- 65–79: Solid setup, tradeable with normal sizing
-- 50–64: Marginal, requires caution, reduce size if trading
-- Below 50: Avoid regardless of other factors
+VERDICT CRITERIA (after macro adjustments):
+- TAKE: Technical edge clear + macro not opposed + final confidence ≥65 (≥75 if UNCERTAIN, ≥80 if RISK_OFF)
+- WATCH: Good technical setup but macro headwind, OR marginal technicals with macro support. Worth monitoring.
+- SKIP: Technical conflicts, low conviction, ranging market, OR final confidence below threshold after macro penalty
 
-Be direct and professional. Do not hedge unnecessarily. If the setup is weak, say so clearly. If it is strong, say so with conviction. Your reasoning should reflect actual trading experience, not generic disclaimers.
+Confidence scale:
+- 80-100: Exceptional — technical + macro fully aligned
+- 65-79: Tradeable — solid setup, normal sizing
+- 50-64: Marginal — caution, reduce size
+- Below 50: Avoid
 
-CRITICAL: Respond ONLY with valid JSON. No preamble, no markdown, no explanation outside the JSON object.
+Be direct. Reference specific macro conditions in your reasoning. If macro is killing an otherwise good technical setup, say so explicitly.
+
+CRITICAL: Respond ONLY with valid JSON. No preamble, no markdown.
 
 JSON schema:
 {
-  "verdict": "TAKE" | "WATCH" | "SKIP",
+  "verdict": "TAKE"|"WATCH"|"SKIP",
   "confidence": <integer 0-100>,
-  "edge": "<one sentence: what gives this trade its primary edge>",
-  "risk": "<one sentence: the single biggest reason this trade could fail>",
-  "reasoning": "<2-3 sentences of professional analysis explaining your verdict>",
-  "checklist_overrides": ["<optional: factors the engine scored that you weigh differently>"]
+  "technical_confidence": <integer 0-100 — score before macro adjustment>,
+  "macro_adjustment": <integer — positive or negative points applied from macro>,
+  "macro_alignment": "ALIGNED"|"NEUTRAL"|"CONFLICTED",
+  "edge": "<one sentence: primary technical edge>",
+  "macro_impact": "<one sentence: how the macro environment affects this trade>",
+  "risk": "<one sentence: single biggest risk — technical or macro>",
+  "reasoning": "<2-3 sentences combining technical and macro analysis>",
+  "position_guidance": "<one sentence: any sizing or SL adjustment recommended given macro regime>",
+  "checklist_overrides": ["<optional: factors you weigh differently>"]
 }`;
 
 async function evaluateSignal(idx){
@@ -2032,25 +2112,44 @@ async function evaluateSignal(idx){
 function renderVerdictOnCard(idx,v){
   const detailEl=document.getElementById('sd-'+idx);
   if(!detailEl)return;
-
-  // Remove existing verdict if re-evaluating
   detailEl.querySelector('.ai-verdict')?.remove();
   detailEl.querySelector('.ai-eval-btn')?.remove();
 
   const s=signals[idx];
   const conf=v.confidence||0;
+  const techConf=v.technical_confidence||conf;
+  const macroAdj=v.macro_adjustment||0;
   const vClass={TAKE:'vb-take',WATCH:'vb-watch',SKIP:'vb-skip'}[v.verdict]||'vb-watch';
-  const ringColor=conf>=70?'#00e87a':conf>=50?'#f59e0b':'#ff2d55';
+  const ringColor=conf>=70?'#059669':conf>=50?'#d97706':'#dc2626';
   const ringColor2=conf>=70?'var(--grn)':conf>=50?'var(--amb)':'var(--red)';
   const tierTxt=conf>=80?'HIGH CONVICTION':conf>=65?'TRADEABLE':conf>=50?'MARGINAL':'LOW QUALITY';
   const circumference=2*Math.PI*22;
   const dash=(conf/100)*circumference;
+
+  // Macro alignment display
+  const maAlign=v.macro_alignment||'NEUTRAL';
+  const maColor={ALIGNED:'var(--grn)',NEUTRAL:'var(--mut)',CONFLICTED:'var(--red)'}[maAlign]||'var(--mut)';
+  const maIcon={ALIGNED:'✓',NEUTRAL:'⚠',CONFLICTED:'✗'}[maAlign]||'—';
+  const maAdjTxt=macroAdj>0?`+${macroAdj}`:macroAdj<0?`${macroAdj}`:'0';
+  const macroRowHTML=v.macro_impact?`<div class="av-section" style="background:${maAlign==='CONFLICTED'?'var(--rd)':maAlign==='ALIGNED'?'var(--gd)':'var(--bg2)'};border-radius:8px;padding:9px 11px;margin-bottom:4px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <span style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:${maColor}">${maIcon} Macro ${maAlign}</span>
+      <span style="font-family:'DM Mono',monospace;font-size:10px;font-weight:700;color:${macroAdj>=0?'var(--grn)':'var(--red)'}">${maAdjTxt} pts adjustment</span>
+    </div>
+    <div style="font-size:11px;color:var(--txt2);line-height:1.5">${v.macro_impact}</div>
+  </div>`:''
+
+  // Technical vs final confidence breakdown
+  const confBreakdownHTML=v.technical_confidence&&v.macro_adjustment!==undefined?`<div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--mut);margin-top:4px;line-height:1.6">Technical: ${techConf} → Macro adj: ${maAdjTxt} → Final: ${conf}</div>`:'';
+
   const overridesHtml=v.checklist_overrides?.length?
     `<div class="av-overrides"><div class="av-sec-lbl" style="margin-bottom:4px">Engine Disagreements</div>${v.checklist_overrides.map(o=>`<div class="av-override-item">⚡ ${o}</div>`).join('')}</div>`:''
 
+  const posGuidanceHTML=v.position_guidance?`<div class="av-section"><div class="av-sec-lbl">Position Guidance</div><div style="font-size:11px;color:var(--txt2);line-height:1.5;background:var(--bd);border-left:2px solid var(--blu);padding:7px 10px;border-radius:0 6px 6px 0">${v.position_guidance}</div></div>`:'';
+
   const verdictHtml=`<div class="ai-verdict">
     <div class="av-header">
-      <div class="av-label">AI Evaluation</div>
+      <div class="av-label">AI Evaluation · Macro-Aware</div>
       <div class="av-badges">
         <span class="verdict-badge ${vClass}">${v.verdict}</span>
       </div>
@@ -2067,12 +2166,14 @@ function renderVerdictOnCard(idx,v){
         <div class="conf-ring-num" style="color:${ringColor2}">${conf}</div>
       </div>
       <div class="conf-meta">
-        <div class="conf-lbl">Confidence Score</div>
+        <div class="conf-lbl">Macro-Adjusted Confidence</div>
         <div class="conf-bar-w"><div class="conf-bar-fill" style="width:${conf}%;background:${ringColor2}"></div></div>
         <div class="conf-tier" style="color:${ringColor2}">${tierTxt}</div>
+        ${confBreakdownHTML}
       </div>
     </div>
     <div class="av-body">
+      ${macroRowHTML}
       <div class="av-section">
         <div class="av-edge">⚡ Edge: ${v.edge||'—'}</div>
         <div class="av-risk">⚠ Risk: ${v.risk||'—'}</div>
@@ -2081,6 +2182,7 @@ function renderVerdictOnCard(idx,v){
         <div class="av-sec-lbl">Analysis</div>
         <div class="av-text">${v.reasoning||'—'}</div>
       </div>
+      ${posGuidanceHTML}
       ${overridesHtml}
     </div>
     <div class="av-footer">
@@ -2509,6 +2611,7 @@ function renderMacroTab(){
     document.getElementById('macroBtn').textContent = '🔄 Refresh Macro Analysis';
     try{
       renderMacroReport(JSON.parse(stored), new Date(parseInt(ts)).toLocaleString('en-SG',{weekday:'short',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}));
+      const pdfBtn=document.getElementById('macroPdfBtn');if(pdfBtn)pdfBtn.style.display='block';
     }catch(e){}
   } else {
     noteEl.textContent = 'Powered by Claude with live web search · ~$0.03 per report';
@@ -2582,6 +2685,7 @@ async function runMacroAnalysis(){
     renderMacroReport(report, tsLabel);
     document.getElementById('macroCacheNote').textContent = `Generated ${tsLabel} · Next refresh in ${MACRO_CACHE_HOURS}h`;
     document.getElementById('macroBtn').textContent = '🔄 Refresh Macro Analysis';
+    const pdfBtn=document.getElementById('macroPdfBtn');if(pdfBtn)pdfBtn.style.display='block';
 
   }catch(e){
     document.getElementById('macroContent').innerHTML =
@@ -3120,8 +3224,19 @@ function checkPreTradeGate(tradeToLog,onProceed){
           } else if(m.regime==='UNCERTAIN'){
             gateReasons.push({icon:'⚠',title:'Macro: UNCERTAIN Regime',detail:`Macro environment is UNCERTAIN. Consider waiting for clearer conditions. Report is ${macroAgeH.toFixed(1)}h old.`,severity:'warn',stat_label:'Macro',stat_val:'UNCERTAIN',stat_color:'var(--amb)'});
           }
+          // Asset-specific conflict check
+          const assetBiasEntry=(m.asset_bias||[]).find(a=>a.asset===tradeToLog.asset);
+          if(assetBiasEntry&&assetBiasEntry.bias!=='NEUTRAL'&&assetBiasEntry.bias!==tradeToLog.direction){
+            gateReasons.push({icon:'🔄',title:`Macro conflicts: ${tradeToLog.asset} bias is ${assetBiasEntry.bias}`,detail:assetBiasEntry.reason||'Macro asset bias opposes this trade direction.',severity:'danger',stat_label:'Asset Bias',stat_val:assetBiasEntry.bias,stat_color:'var(--red)'});
+          }
         }catch(e){}
+      } else if(macroAgeH>=12){
+        // Staleness nudge — not a block, just a reminder
+        gateReasons.push({icon:'⏱',title:`Macro data is ${macroAgeH.toFixed(0)}h old`,detail:'Consider refreshing macro analysis before trading. Tap Macro tab to update.',severity:'warn',stat_label:'Macro Age',stat_val:`${macroAgeH.toFixed(0)}h`,stat_color:'var(--amb)'});
       }
+    } else {
+      // No macro data at all
+      gateReasons.push({icon:'🌐',title:'No macro analysis run',detail:'Run macro analysis first for context-aware trading. Tap Macro tab.',severity:'warn',stat_label:'Macro',stat_val:'MISSING',stat_color:'var(--amb)'});
     }
     if(!gateReasons.length){onProceed();return;}
     showPreTradeGate(tradeToLog,gateReasons,onProceed);
@@ -3140,6 +3255,272 @@ function showPreTradeGate(trade,reasons,onProceed){
 
 function closePTG(){document.getElementById('ptgModal').style.display='none';window._ptgCallback=null;}
 function closePTGAndProceed(){document.getElementById('ptgModal').style.display='none';if(window._ptgCallback)window._ptgCallback();window._ptgCallback=null;}
+// ═══════════════════════════════════════════════════
+// PDF GENERATION ENGINE
+// ═══════════════════════════════════════════════════
+function getPDF(){
+  if(window.jspdf&&window.jspdf.jsPDF)return window.jspdf.jsPDF;
+  if(window.jsPDF)return window.jsPDF;
+  showToast('⚠ PDF library not loaded yet — try again');
+  return null;
+}
+
+// Shared PDF helpers
+function pdfHeader(doc,title,subtitle){
+  const W=doc.internal.pageSize.getWidth();
+  doc.setFillColor(15,25,35);doc.rect(0,0,W,28,'F');
+  doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(14);
+  doc.text('EDGE',14,11);
+  doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(160,170,185);
+  doc.text('v16 · Macro-Aware Trading System',14,18);
+  doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor(255,255,255);
+  doc.text(title,14,24);
+  if(subtitle){doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(160,170,185);doc.text(subtitle,W-14,24,{align:'right'});}
+  return 34;
+}
+function pdfSection(doc,y,label,W){
+  doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(100,116,139);
+  doc.text(label.toUpperCase(),14,y);
+  doc.setDrawColor(226,228,233);doc.setLineWidth(0.3);doc.line(14+doc.getTextWidth(label.toUpperCase())+3,y,W-14,y);
+  return y+6;
+}
+function pdfRow(doc,y,label,value,valueColor){
+  doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(107,114,128);
+  doc.text(label,14,y);
+  doc.setFont('helvetica','bold');doc.setTextColor(...(valueColor||[15,25,35]));
+  doc.text(String(value||'—'),130,y,{align:'right'});
+  doc.setDrawColor(240,241,244);doc.setLineWidth(0.2);doc.line(14,y+2,130,y+2);
+  return y+8;
+}
+function pdfWrap(doc,y,text,x,maxW,lineH,color){
+  doc.setTextColor(...(color||[45,55,72]));
+  const lines=doc.splitTextToSize(String(text||''),maxW);
+  lines.forEach(l=>{if(y>270){doc.addPage();y=20;}doc.text(l,x,y);y+=lineH;});
+  return y;
+}
+function pdfCheckPage(doc,y,needed){
+  if(y+needed>275){doc.addPage();return 20;}
+  return y;
+}
+
+// MACRO REPORT PDF
+function downloadMacroPDF(){
+  const jsPDF=getPDF();if(!jsPDF)return;
+  const stored=localStorage.getItem(MACRO_CACHE_KEY);
+  if(!stored){showToast('⚠ No macro report — run analysis first');return;}
+  const btn=document.querySelector('[onclick="downloadMacroPDF()"]');
+  if(btn){btn.classList.add('loading');btn.textContent='⏳ Generating PDF...';}
+  try{
+    const m=JSON.parse(stored);
+    const ts=localStorage.getItem(MACRO_TS_KEY);
+    const tsLabel=ts?new Date(parseInt(ts)).toLocaleDateString('en-SG',{weekday:'short',year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'Unknown';
+    const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+    const W=doc.internal.pageSize.getWidth();
+    let y=pdfHeader(doc,'Macro Environment Report',tsLabel);
+
+    // Regime banner
+    const regimeColor=m.regime==='RISK_ON'?[5,150,105]:m.regime==='RISK_OFF'?[220,38,38]:[217,119,6];
+    doc.setFillColor(...regimeColor);doc.roundedRect(14,y,W-28,10,2,2,'F');
+    doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(255,255,255);
+    doc.text(`${m.regime||'UNKNOWN'}  ·  CRYPTO ${m.crypto_bias||'UNKNOWN'}`,W/2,y+6.5,{align:'center'});
+    y+=15;
+
+    // Headline
+    doc.setFont('helvetica','bold');doc.setFontSize(12);doc.setTextColor(15,25,35);
+    const headLines=doc.splitTextToSize(m.headline||'',W-28);
+    headLines.forEach(l=>{doc.text(l,14,y);y+=7;});
+    y+=3;
+
+    // Sentiment strip
+    y=pdfSection(doc,y,'Sentiment Indicators',W);
+    const si=m.sentiment_indicators||{};
+    const cols=['Fed','DXY','Risk'];const vals=[si.fed_stance,si.dxy,si.risk_sentiment];
+    const cW=(W-28)/3;
+    cols.forEach((c,i)=>{
+      doc.setFillColor(242,244,247);doc.roundedRect(14+i*cW,y,cW-2,18,2,2,'F');
+      doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(107,114,128);doc.text(c,14+i*cW+4,y+5);
+      doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(15,25,35);
+      const vLines=doc.splitTextToSize(String(vals[i]||'N/A'),cW-8);
+      vLines.slice(0,2).forEach((l,li)=>doc.text(l,14+i*cW+4,y+10+li*4));
+    });
+    y+=24;
+
+    // Macro summary
+    y=pdfCheckPage(doc,y,30);y=pdfSection(doc,y,'Macro Summary',W);
+    doc.setFont('helvetica','normal');doc.setFontSize(9);
+    y=pdfWrap(doc,y,m.macro_summary,14,W-28,5.5,[45,55,72]);
+    y+=4;
+
+    // Key events
+    if(m.key_events?.length){
+      y=pdfCheckPage(doc,y,15);y=pdfSection(doc,y,'Key Events',W);
+      m.key_events.forEach(ev=>{
+        y=pdfCheckPage(doc,y,14);
+        const dotColor=ev.impact==='HIGH'?[220,38,38]:ev.impact==='MEDIUM'?[217,119,6]:[5,150,105];
+        doc.setFillColor(...dotColor);doc.circle(17,y-1.5,1.5,'F');
+        doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(15,25,35);doc.text(ev.title||'',21,y);
+        y+=5;
+        doc.setFont('helvetica','normal');doc.setFontSize(8);
+        y=pdfWrap(doc,y,ev.description,21,W-35,4.5,[107,114,128]);
+        y+=2;
+      });
+      y+=2;
+    }
+
+    // Asset bias
+    if(m.asset_bias?.length){
+      y=pdfCheckPage(doc,y,20);y=pdfSection(doc,y,'Asset Bias',W);
+      m.asset_bias.forEach(a=>{
+        y=pdfCheckPage(doc,y,12);
+        const bColor=a.bias==='LONG'?[5,150,105]:a.bias==='SHORT'?[220,38,38]:[107,114,128];
+        doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(15,25,35);doc.text(a.asset,14,y);
+        doc.setFillColor(...bColor);doc.roundedRect(28,y-4.5,14,6,1.5,1.5,'F');
+        doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(255,255,255);doc.text(a.bias||'',28+7,y-0.5,{align:'center'});
+        doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(107,114,128);
+        y=pdfWrap(doc,y+2,a.reason,14,W-28,4.5);
+        y+=2;
+      });
+    }
+
+    // Watch this week
+    if(m.watch_this_week){
+      y=pdfCheckPage(doc,y,20);y=pdfSection(doc,y,'Watch This Week',W);
+      doc.setFillColor(255,251,235);doc.roundedRect(14,y,W-28,16,2,2,'F');
+      doc.setDrawColor(217,119,6);doc.setLineWidth(0.5);doc.line(14,y,14,y+16);
+      doc.setFont('helvetica','normal');doc.setFontSize(8.5);doc.setTextColor(45,55,72);
+      y=pdfWrap(doc,y+5,m.watch_this_week,18,W-34,5.5);
+      y+=6;
+    }
+
+    // Sources
+    if(m.links?.length){
+      y=pdfCheckPage(doc,y,15);y=pdfSection(doc,y,'Sources',W);
+      m.links.slice(0,5).forEach(l=>{
+        y=pdfCheckPage(doc,y,8);
+        doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(15,25,35);doc.text(l.title||'',14,y);
+        doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(37,99,235);doc.text(l.url||'',14,y+4);
+        y+=10;
+      });
+    }
+
+    // Footer
+    const pages=doc.internal.getNumberOfPages();
+    for(let i=1;i<=pages;i++){doc.setPage(i);doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(156,163,175);doc.text(`EDGE v16 · Macro Report · Generated ${tsLabel} · Page ${i}/${pages}`,W/2,290,{align:'center'});}
+
+    doc.save(`EDGE_Macro_Report_${new Date().toISOString().split('T')[0]}.pdf`);
+    showToast('✓ Macro PDF downloaded');
+  }catch(e){showToast('⚠ PDF error: '+e.message);}
+  if(btn){btn.classList.remove('loading');btn.innerHTML=`<svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download Macro Report PDF`;}
+}
+
+// STATS REPORT PDF
+function downloadStatsPDF(){
+  const jsPDF=getPDF();if(!jsPDF)return;
+  const closed=trades.filter(t=>t.status!=='OPEN'&&t.status!=='NOT_FILLED');
+  if(!closed.length){showToast('⚠ No closed trades yet');return;}
+  const btn=document.querySelector('[onclick="downloadStatsPDF()"]');
+  if(btn){btn.classList.add('loading');btn.textContent='⏳ Generating PDF...';}
+  try{
+    const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+    const W=doc.internal.pageSize.getWidth();
+    const tsLabel=new Date().toLocaleDateString('en-SG',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+    let y=pdfHeader(doc,'Performance Report',tsLabel);
+
+    const wins=closed.filter(t=>t.status==='WIN').length;
+    const losses=closed.filter(t=>t.status==='LOSS').length;
+    const bes=closed.filter(t=>t.status==='BE').length;
+    const nf=trades.filter(t=>t.status==='NOT_FILLED').length;
+    const wr=closed.length?wins/closed.length:0;
+    const rVals=closed.map(t=>{if(t.exitPrice)return(Math.abs(t.exitPrice-t.entry)/Math.abs(t.stop-t.entry))*(t.status==='WIN'?1:-1);return t.status==='WIN'?t.rr:-1;});
+    const totR=rVals.reduce((a,b)=>a+b,0);
+    const wRs=rVals.filter(r=>r>0),lRs=rVals.filter(r=>r<0);
+    const avgW=wRs.length?wRs.reduce((a,b)=>a+b,0)/wRs.length:0;
+    const avgL=lRs.length?Math.abs(lRs.reduce((a,b)=>a+b,0)/lRs.length):0;
+    const exp=(wr*avgW)-((1-wr)*avgL);
+
+    // KPI grid
+    y=pdfSection(doc,y,'Performance Summary',W);
+    const kpis=[['Closed Trades',closed.length,[15,25,35]],['Win Rate',(wr*100).toFixed(0)+'%',wr>=0.5?[5,150,105]:[220,38,38]],['Expectancy',(exp>=0?'+':'')+exp.toFixed(2)+'R',exp>=0?[5,150,105]:[220,38,38]],['Total P&L',(totR>=0?'+':'')+totR.toFixed(1)+'R',totR>=0?[5,150,105]:[220,38,38]]];
+    const kW=(W-28)/4;
+    kpis.forEach(([l,v,c],i)=>{
+      doc.setFillColor(242,244,247);doc.roundedRect(14+i*kW,y,kW-2,16,2,2,'F');
+      doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(107,114,128);doc.text(l,14+i*kW+(kW-2)/2,y+5,{align:'center'});
+      doc.setFont('helvetica','bold');doc.setFontSize(13);doc.setTextColor(...c);doc.text(String(v),14+i*kW+(kW-2)/2,y+13,{align:'center'});
+    });
+    y+=21;
+
+    // Secondary stats
+    y=pdfRow(doc,y,'Avg Win','+'+avgW.toFixed(2)+'R',[5,150,105]);
+    y=pdfRow(doc,y,'Avg Loss','-'+avgL.toFixed(2)+'R',[220,38,38]);
+    y=pdfRow(doc,y,'Breakeven',bes,[107,114,128]);
+    y=pdfRow(doc,y,'Not Filled',nf,[107,114,128]);
+    y+=4;
+
+    // By Asset
+    const byA={};closed.forEach(t=>{if(!byA[t.asset])byA[t.asset]={tot:0,w:0};byA[t.asset].tot++;if(t.status==='WIN')byA[t.asset].w++;});
+    if(Object.keys(byA).length){
+      y=pdfCheckPage(doc,y,15);y=pdfSection(doc,y,'By Asset',W);
+      Object.entries(byA).forEach(([a,d])=>{
+        const w=d.tot?d.w/d.tot:0;
+        y=pdfCheckPage(doc,y,9);
+        doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(15,25,35);doc.text(a,14,y);
+        doc.setFillColor(232,234,238);doc.roundedRect(35,y-4,60,5,1,1,'F');
+        doc.setFillColor(...(w>=0.5?[5,150,105]:[220,38,38]));doc.roundedRect(35,y-4,60*w,5,1,1,'F');
+        doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(107,114,128);doc.text(`${d.w}W/${d.tot-d.w}L · ${(w*100).toFixed(0)}%`,100,y);
+        y+=8;
+      });
+      y+=3;
+    }
+
+    // Trade log
+    y=pdfCheckPage(doc,y,20);y=pdfSection(doc,y,'Trade Log',W);
+    doc.setFillColor(15,25,35);doc.rect(14,y,W-28,7,'F');
+    ['Date','Asset','Dir','Score','AI','R:R','Outcome'].forEach((h,i)=>{
+      const xs=[0,22,42,54,67,82,100];
+      doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(255,255,255);doc.text(h,14+xs[i],y+4.5);
+    });
+    y+=9;
+    closed.slice().reverse().forEach((t,ri)=>{
+      y=pdfCheckPage(doc,y,8);
+      if(ri%2===0){doc.setFillColor(248,249,251);doc.rect(14,y-4,W-28,7,'F');}
+      const xs=[0,22,42,54,67,82,100];
+      const vals=[t.date?.slice(5)||'',t.asset,t.direction,String(t.score||0),t.aiVerdict?.verdict||'—',String(t.rr||'—')+'R',t.status];
+      const rowColor=t.status==='WIN'?[5,150,105]:t.status==='LOSS'?[220,38,38]:[107,114,128];
+      vals.forEach((v,i)=>{
+        doc.setFont('helvetica',i===6?'bold':'normal');doc.setFontSize(7.5);
+        doc.setTextColor(...(i===6?rowColor:[45,55,72]));doc.text(v,14+xs[i],y);
+      });
+      y+=7;
+    });
+
+    // Diagnostic summary if available
+    const diagCached=localStorage.getItem(DIAG_CACHE_KEY);
+    if(diagCached){
+      try{
+        const{report:dr}=JSON.parse(diagCached);
+        if(dr){
+          y=pdfCheckPage(doc,y,30);y=pdfSection(doc,y,'Latest Diagnostic',W);
+          const decColor={ENTER:[5,150,105],WAIT:[217,119,6],EXIT:[220,38,38],HEDGE:[37,99,235],REBALANCE:[124,58,237]}[dr.trade_decision]||[107,114,128];
+          doc.setFillColor(...decColor.map(c=>Math.round(c*0.15+240)));
+          doc.roundedRect(14,y,W-28,10,2,2,'F');
+          doc.setFont('helvetica','bold');doc.setFontSize(10);doc.setTextColor(...decColor);
+          doc.text(`${dr.trade_decision} — ${dr.decision_reason||''}`,W/2,y+6.5,{align:'center'});
+          y+=14;
+          doc.setFont('helvetica','normal');doc.setFontSize(8);
+          y=pdfWrap(doc,y,dr.system_diagnosis,14,W-28,5,[45,55,72]);
+          if(dr.rule_change){y+=3;doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(5,150,105);doc.text('Rule Change: ',14,y);doc.setFont('helvetica','normal');doc.setTextColor(45,55,72);doc.text(dr.rule_change,14+doc.getTextWidth('Rule Change: '),y);y+=6;}
+        }
+      }catch(e){}
+    }
+
+    const pages=doc.internal.getNumberOfPages();
+    for(let i=1;i<=pages;i++){doc.setPage(i);doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(156,163,175);doc.text(`EDGE v16 · Stats Report · ${tsLabel} · Page ${i}/${pages}`,W/2,290,{align:'center'});}
+    doc.save(`EDGE_Stats_Report_${new Date().toISOString().split('T')[0]}.pdf`);
+    showToast('✓ Stats PDF downloaded');
+  }catch(e){showToast('⚠ PDF error: '+e.message.slice(0,50));}
+  if(btn){btn.classList.remove('loading');btn.innerHTML=`<svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download Stats Report PDF`;}
+}
+
 function fmtP(p){if(!p&&p!==0)return'—';if(p>=10000)return p.toLocaleString('en',{maximumFractionDigits:0});if(p>=1000)return p.toLocaleString('en',{minimumFractionDigits:1,maximumFractionDigits:1});if(p>=1)return p.toFixed(3);return p.toFixed(5);}
 function fmtOI(v){if(!v)return'—';if(v>=1e9)return(v/1e9).toFixed(1)+'B';if(v>=1e6)return(v/1e6).toFixed(1)+'M';if(v>=1e3)return(v/1e3).toFixed(1)+'K';return v.toFixed(0);}
 function priceDp(p){return p>=10000?0:p>=1000?1:p>=1?3:5;}
