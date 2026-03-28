@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>EDGE v16</title>
+<title>EDGE v17</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -634,7 +634,7 @@ textarea.fi{resize:none;height:64px;line-height:1.55;font-size:12px}
 <div id="app">
 
 <div class="hdr">
-  <div class="logo">EDGE<small>v16 · Macro-Aware</small></div>
+  <div class="logo">EDGE<small>v17 · Cost Optimised</small></div>
   <div class="hdr-r">
     <span class="sess-pill" id="sessPill">—</span>
     <button class="icon-btn" onclick="doRefreshMkt()" title="Refresh">↻</button>
@@ -2559,7 +2559,7 @@ function renderWeeklyHTML(r,ts){
 // ═══════════════════════════════════════════════════
 const MACRO_CACHE_KEY  = 'edge_macro_report';
 const MACRO_TS_KEY     = 'edge_macro_ts';
-const MACRO_CACHE_HOURS = 24;
+const MACRO_CACHE_HOURS = 48;
 
 const MACRO_SYSTEM = `You are a macro analyst and crypto market strategist. Your job is to analyse the current macro environment and its direct impact on crypto markets, specifically BTC, ETH, SOL, HYPE, and AVAX perpetual futures on Hyperliquid.
 
@@ -2606,7 +2606,7 @@ function renderMacroTab(){
     const fresh = ageH < MACRO_CACHE_HOURS;
     const ageLabel = ageH < 1 ? 'Just now' : ageH < 24 ? `${Math.round(ageH)}h ago` : `${Math.round(ageH/24)}d ago`;
     noteEl.textContent = fresh
-      ? `Report from ${ageLabel} · Next refresh in ${Math.round(MACRO_CACHE_HOURS - ageH)}h`
+      ? `Report from ${ageLabel} · Next refresh in ${Math.round(MACRO_CACHE_HOURS - ageH)}h · 48H cache active`
       : `Report from ${ageLabel} · Cache expired — tap to refresh`;
     document.getElementById('macroBtn').textContent = '🔄 Refresh Macro Analysis';
     try{
@@ -2658,9 +2658,9 @@ async function runMacroAnalysis(){
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 2000,
-        tools:[{type:'web_search_20250305',name:'web_search'}],
+        tools:[{type:'web_search_20250305',name:'web_search',max_uses:3}],
         system: MACRO_SYSTEM,
-        messages:[{role:'user',content:`Analyse the current macro environment and its impact on crypto markets. Today's date is ${new Date().toLocaleDateString('en-SG',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}. Search for the latest data and produce the JSON report.`}]
+        messages:[{role:'user',content:`Analyse the current macro environment and its impact on crypto markets. Today's date is ${new Date().toLocaleDateString('en-SG',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}. Use a maximum of 3 targeted searches. Search efficiently — one for macro/Fed/DXY, one for crypto market conditions, one for key recent events. Produce the JSON report.`}]
       })
     });
 
@@ -2834,9 +2834,9 @@ async function runNewsMonitor(){
       body:JSON.stringify({
         model:'claude-sonnet-4-20250514',
         max_tokens:800,
-        tools:[{type:'web_search_20250305',name:'web_search'}],
+        tools:[{type:'web_search_20250305',name:'web_search',max_uses:2}],
         system:NEWS_SYSTEM,
-        messages:[{role:'user',content:`Check for breaking news in the last 2 hours that could impact crypto markets. Today: ${new Date().toLocaleString('en-SG')}. ${posContext}. Search for Trump crypto/Iran/trade statements, Fed speakers, major market events, and any sudden crypto-specific news. Produce the JSON risk report.`}]
+        messages:[{role:'user',content:`Check for breaking news in the last 2 hours that could impact crypto markets. Today: ${new Date().toLocaleString('en-SG')}. ${posContext}. Use maximum 2 searches. Focus on: Trump/Iran/Fed statements and major crypto-specific events. Produce the JSON risk report.`}]
       })
     });
     if(!resp.ok){const err=await resp.json().catch(()=>({}));throw new Error(err?.error?.message||`API ${resp.status}`);}
@@ -3069,8 +3069,8 @@ async function autoRunDiagnostic(){
     const totR=rVals.reduce((a,b)=>a+b,0);
     const exp=closed.length?totR/closed.length:0;
     const skipOverrides=closed.filter(t=>t.aiVerdict?.verdict==='SKIP').length;
-    // Change 4: Cap at last 50 trades to control prompt size
-    const recentClosed=closed.length>50?closed.slice(-50):closed;
+    // Cap at last 20 trades to control prompt size (was 50 — reduced for cost)
+    const recentClosed=closed.length>20?closed.slice(-20):closed;
     const tradeData=recentClosed.map(t=>({asset:t.asset,direction:t.direction,date:t.date,status:t.status,setup:t.setup,tier:t.tier||'N/A',score:t.score||0,session:t.sessionQ||'N/A',entryType:t.entryType||'N/A',rr:t.rr,aiVerdict:t.aiVerdict?{verdict:t.aiVerdict.verdict,confidence:t.aiVerdict.confidence}:null,debriefWeakFactor:t.debriefResult?.weakest_factor||null,debriefPattern:t.debriefResult?.pattern_flag||null,processScore:t.debriefResult?.process_score||null,notes:t.notes?.slice(0,120)||''}));
     // Change 5: Prune AI cache entries older than 7 days
     try{
@@ -3088,7 +3088,7 @@ async function autoRunDiagnostic(){
     if(macroStored){try{const m=JSON.parse(macroStored);macroContext=`Regime:${m.regime||'?'} CryptoBias:${m.crypto_bias||'?'} ${m.macro_summary?.slice(0,200)||''}`;}catch(e){}}
     const tier=closed.length>=TIER_THRESHOLDS.sizing?4:closed.length>=TIER_THRESHOLDS.scoring?3:closed.length>=TIER_THRESHOLDS.minor?2:1;
     const prompt=`DIAGNOSTIC REQUEST\nClosed:${closed.length} (${wins}W/${losses}L/${bes}BE) WR:${closed.length?(wins/closed.length*100).toFixed(0):0}% TotalR:${totR.toFixed(2)} Exp:${exp.toFixed(2)}R/trade SKIP-overrides:${skipOverrides}\nTier:${tier} (minor≥${TIER_THRESHOLDS.minor},scoring≥${TIER_THRESHOLDS.scoring},sizing≥${TIER_THRESHOLDS.sizing})\n\nMACRO:${macroContext}\n\nACTIVE SIGNALS:${activeSignals.length?JSON.stringify(activeSignals):'None'}\n\nTRADES:${JSON.stringify(tradeData)}\n\nProduce diagnostic JSON. Tier${tier} — enforce threshold rules for improvement_insight.`;
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1200,system:DIAG_SYSTEM,messages:[{role:'user',content:prompt}]})});
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:900,system:DIAG_SYSTEM,messages:[{role:'user',content:prompt}]})});
     if(!resp.ok)return;
     const data=await resp.json();
     const textBlock=data.content?.find(c=>c.type==='text');
