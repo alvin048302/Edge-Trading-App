@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>EDGE v12</title>
+<title>EDGE v15</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
 <style>
@@ -531,13 +531,104 @@ textarea.fi{resize:none;height:64px;line-height:1.55;font-size:12px}
 .rf-trade-action{font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;border:none;cursor:pointer}
 .rf-close-btn{background:var(--rd);color:var(--red)}
 .rf-watch-btn{background:var(--ad);color:var(--amb)}
+/* ── DIAGNOSTIC MODE ── */
+.diag-card{background:var(--bg1);border:2px solid var(--txt);border-radius:13px;overflow:hidden;margin-bottom:12px}
+.diag-hdr{background:var(--txt);padding:13px 15px 11px;display:flex;align-items:flex-start;justify-content:space-between}
+.diag-hdr-left{flex:1}
+.diag-label{font-family:'DM Mono',monospace;font-size:9px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.55);margin-bottom:4px}
+.diag-title{font-size:15px;font-weight:700;color:#fff;line-height:1.2;margin-bottom:3px}
+.diag-sub{font-size:11px;color:rgba(255,255,255,.6)}
+.diag-wr-ring{position:relative;width:52px;height:52px;flex-shrink:0}
+.diag-wr-ring svg{width:52px;height:52px;transform:rotate(-90deg)}
+.diag-ring-bg{fill:none;stroke:rgba(255,255,255,.15);stroke-width:4}
+.diag-ring-fill{fill:none;stroke-width:4;stroke-linecap:round;transition:stroke-dasharray .8s ease}
+.diag-ring-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:13px;font-weight:700;color:#fff;line-height:1}
+.diag-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--bdr);border-bottom:1px solid var(--bdr)}
+.diag-kpi{background:var(--bg2);padding:10px 8px;text-align:center}
+.diag-kpi-lbl{font-size:8px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);margin-bottom:4px}
+.diag-kpi-val{font-family:'DM Mono',monospace;font-size:15px;font-weight:700;line-height:1}
+.diag-body{padding:14px 15px}
+.diag-section{margin-bottom:14px}
+.diag-section:last-child{margin-bottom:0}
+.diag-sec-lbl{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.diag-sec-lbl::after{content:'';flex:1;height:1px;background:var(--bdr)}
+.diag-finding{display:flex;align-items:flex-start;gap:9px;padding:8px 0;border-bottom:1px solid var(--bdr)}
+.diag-finding:last-child{border-bottom:none}
+.diag-find-icon{font-size:14px;flex-shrink:0;margin-top:1px}
+.diag-find-body{flex:1}
+.diag-find-title{font-size:12px;font-weight:600;color:var(--txt);margin-bottom:2px;line-height:1.4}
+.diag-find-detail{font-size:11px;color:var(--mut);line-height:1.5}
+.diag-root-cause{background:var(--rd);border:1.5px solid var(--red);border-radius:9px;padding:12px 13px;margin-bottom:10px}
+.diag-rc-lbl{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--red);margin-bottom:5px}
+.diag-rc-text{font-size:12px;color:var(--txt);line-height:1.6;font-weight:500}
+.diag-rule{background:linear-gradient(135deg,var(--gd),rgba(37,99,235,.06));border:1.5px solid var(--grn);border-radius:9px;padding:12px 13px}
+.diag-rule-lbl{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--grn);margin-bottom:5px;display:flex;align-items:center;gap:5px}
+.diag-rule-text{font-size:12px;color:var(--txt);line-height:1.6;font-weight:500}
+.diag-ts{font-family:'DM Mono',monospace;font-size:9px;color:var(--dim);padding:8px 15px;border-top:1px solid var(--bdr);background:var(--bg2);display:flex;justify-content:space-between;align-items:center}
+.diag-running{background:var(--bg2);border:1.5px dashed var(--bdr2);border-radius:11px;padding:16px;margin-bottom:12px;display:flex;align-items:center;gap:10px}
+.diag-running-txt{font-size:12px;color:var(--mut)}
+.diag-running-txt b{color:var(--txt);display:block;font-size:13px;margin-bottom:2px}
+.diag-badge{display:inline-flex;align-items:center;gap:4px;font-family:'DM Mono',monospace;font-size:9px;font-weight:700;padding:2px 8px;border-radius:4px;letter-spacing:.06em}
+.db-auto{background:var(--bd);color:var(--blu)}
+/* ── PRE-TRADE GATE ── */
+.ptg-overlay{position:fixed;inset:0;background:rgba(15,25,35,.7);z-index:2000;display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .2s}
+.ptg-sheet{background:var(--bg1);border-radius:18px 18px 0 0;width:100%;max-width:480px;padding:22px 20px 32px;max-height:80vh;overflow-y:auto}
+.ptg-icon{font-size:28px;text-align:center;margin-bottom:8px}
+.ptg-title{font-size:17px;font-weight:700;color:var(--txt);text-align:center;margin-bottom:5px;line-height:1.3}
+.ptg-sub{font-size:12px;color:var(--mut);text-align:center;margin-bottom:16px;line-height:1.6}
+.ptg-pattern{background:var(--rd);border:1.5px solid var(--red);border-radius:10px;padding:12px 14px;margin-bottom:12px}
+.ptg-pattern-lbl{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--red);margin-bottom:5px}
+.ptg-pattern-txt{font-size:12px;color:var(--txt);line-height:1.6}
+.ptg-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px}
+.ptg-stat{background:var(--bg2);border-radius:8px;padding:10px;text-align:center}
+.ptg-stat-lbl{font-size:9px;color:var(--mut);margin-bottom:3px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.ptg-stat-val{font-family:'DM Mono',monospace;font-size:17px;font-weight:700}
+.ptg-proceed{width:100%;padding:14px;background:var(--txt);color:#fff;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px}
+.ptg-cancel{width:100%;padding:12px;background:transparent;color:var(--mut);border:1.5px solid var(--bdr2);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer}
+.ptg-note{font-size:10px;color:var(--dim);text-align:center;margin-top:10px;line-height:1.5}
+/* Upgraded diag section styles */
+.diag-action-box{border-radius:10px;padding:13px 14px;margin-bottom:10px;border:1.5px solid}
+.da-enter{background:var(--gd);border-color:var(--grn)}
+.da-wait{background:var(--ad);border-color:var(--amb)}
+.da-exit{background:var(--rd);border-color:var(--red)}
+.da-hedge{background:var(--bd);border-color:var(--blu)}
+.da-rebalance{background:var(--pud);border-color:var(--pur)}
+.diag-action-lbl{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin-bottom:4px}
+.diag-action-txt{font-size:13px;font-weight:700;line-height:1.4}
+.diag-action-why{font-size:11px;margin-top:4px;line-height:1.5;opacity:.8}
+.diag-conf-bar-w{background:var(--bg3);border-radius:3px;height:6px;overflow:hidden;margin:6px 0 3px}
+.diag-conf-bar{height:100%;border-radius:3px;transition:width .8s ease}
+.diag-threshold-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-family:'DM Mono',monospace;font-size:9px;font-weight:700;letter-spacing:.06em}
+.tp-1{background:var(--rd);color:var(--red)}
+.tp-2{background:var(--ad);color:var(--amb)}
+.tp-3{background:var(--bd);color:var(--blu)}
+.tp-4{background:var(--gd2);color:var(--grn)}
+.signal-quality-grid{display:flex;flex-direction:column;gap:7px}
+.sq-item{background:var(--bg2);border-radius:8px;padding:10px 12px}
+.sq-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.sq-asset{font-family:'DM Mono',monospace;font-size:13px;font-weight:700}
+.sq-badges{display:flex;gap:5px}
+.sq-strength{font-size:9px;font-weight:700;padding:2px 8px;border-radius:4px;letter-spacing:.06em}
+.sq-strong{background:var(--gd2);color:var(--grn)}
+.sq-moderate{background:var(--ad);color:var(--amb)}
+.sq-weak{background:var(--rd);color:var(--red)}
+.sq-risk{font-size:9px;font-weight:700;padding:2px 8px;border-radius:4px}
+.sq-low{background:var(--gd);color:var(--grn)}
+.sq-medium{background:var(--ad);color:var(--amb)}
+.sq-high{background:var(--rd);color:var(--red)}
+.sq-conf-row{display:flex;align-items:center;gap:8px}
+.sq-conf-lbl{font-size:10px;color:var(--mut);width:60px;flex-shrink:0}
+.sq-conf-bar-w{flex:1;background:var(--bg3);border-radius:3px;height:4px;overflow:hidden}
+.sq-conf-bar{height:100%;border-radius:3px}
+.sq-conf-num{font-family:'DM Mono',monospace;font-size:10px;font-weight:600;width:32px;text-align:right;flex-shrink:0}
+.sq-why{font-size:10px;color:var(--mut);margin-top:5px;line-height:1.5;padding-top:5px;border-top:1px solid var(--bdr)}
 </style>
 </head>
 <body>
 <div id="app">
 
 <div class="hdr">
-  <div class="logo">EDGE<small>v12 · News Guard</small></div>
+  <div class="logo">EDGE<small>v15 · Audited Build</small></div>
   <div class="hdr-r">
     <span class="sess-pill" id="sessPill">—</span>
     <button class="icon-btn" onclick="doRefreshMkt()" title="Refresh">↻</button>
@@ -687,7 +778,7 @@ textarea.fi{resize:none;height:64px;line-height:1.55;font-size:12px}
   </div>
 
   <!-- JOURNAL -->
-  <div class="tab" id="tab-journal"><div id="posRiskFlag"></div><div id="journalContent"></div></div>
+  <div class="tab" id="tab-journal"><div id="diagPanel"></div><div id="posRiskFlag"></div><div id="journalContent"></div></div>
 
   <!-- STATS -->
   <div class="tab" id="tab-stats">
@@ -778,6 +869,9 @@ textarea.fi{resize:none;height:64px;line-height:1.55;font-size:12px}
   </div>
 </div>
 
+<!-- PRE-TRADE GATE MODAL -->
+<div id="ptgModal" style="display:none"></div>
+
 <script>
 'use strict';
 
@@ -825,7 +919,7 @@ function goTab(n){
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
   document.getElementById('tab-'+n).classList.add('active');
   document.getElementById('nb-'+n).classList.add('active');
-  if(n==='journal'){renderJournal();checkPositionRisk();}
+  if(n==='journal'){renderJournal();checkPositionRisk();renderDiagPanel();}
   if(n==='stats')renderStats();
   if(n==='plan')onAssetChange();
   if(n==='settings'){renderApiStatus();renderAiAccStats();}
@@ -1045,9 +1139,50 @@ async function analyseAsset(asset,cb){
   const meanRevFired=Math.abs(funding)>CFG.FUND_EDGE;
   const entryType=msbFired&&vol.strong?'breakout':meanRevFired?'meanrev':'continuation';
   const pull={breakout:CFG.ATR_ENTRY_BREAKOUT,continuation:CFG.ATR_ENTRY_CONTINUATION,meanrev:CFG.ATR_ENTRY_MEANREV}[entryType];
+
+  // Change 9: Dynamic SL multiplier based on volatility regime
+  // Only activates when 5+ baseline ATR readings exist for this asset
+  let slMult=CFG.ATR_SL;
+  let volRegime=null;
+  const baseATR=getBaselineATR(asset);
+  if(baseATR&&atr){
+    const volRatio=atr/baseATR;
+    volRegime=volRatio;
+    if(volRatio>2.0)slMult=Math.min(2.5,CFG.ATR_SL*volRatio*0.8);      // very elevated — wide SL
+    else if(volRatio>1.5)slMult=Math.min(2.0,CFG.ATR_SL*volRatio*0.85); // elevated — moderately wider
+    // else use default 1.5×
+  }
+
   let entry=null,sl=null,tp=null;
-  if(atr&&price){entry=direction==='LONG'?price-pull*atr:price+pull*atr;sl=direction==='LONG'?entry-CFG.ATR_SL*atr:entry+CFG.ATR_SL*atr;tp=direction==='LONG'?entry+CFG.ATR_TP*atr:entry-CFG.ATR_TP*atr;}
-  return{asset,direction,tier,disqualified:disq,disqualifyReasons:disqR,score:rawScore,maxScore:18,dirConv,votes,sessionQ:sessQ,entryType,ranging,dailyConflict,price,atr,adx:adx.adx,ema:ema4.val,funding,entry,sl,tp,rr:CFG.ATR_TP/CFG.ATR_SL,entryPull:pull,l1,l2,l3,scanned:new Date().toLocaleTimeString('en-SG',{hour:'2-digit',minute:'2-digit'})};
+  if(atr&&price){
+    entry=direction==='LONG'?price-pull*atr:price+pull*atr;
+    sl=direction==='LONG'?entry-slMult*atr:entry+slMult*atr;
+    tp=direction==='LONG'?entry+CFG.ATR_TP*atr:entry-CFG.ATR_TP*atr;
+  }
+  return{asset,direction,tier,disqualified:disq,disqualifyReasons:disqR,score:rawScore,maxScore:18,dirConv,votes,sessionQ:sessQ,entryType,ranging,dailyConflict,price,atr,baselineATR:baseATR,volRegime,slMult,adx:adx.adx,ema:ema4.val,funding,entry,sl,tp,rr:CFG.ATR_TP/slMult,entryPull:pull,l1,l2,l3,scanned:new Date().toLocaleTimeString('en-SG',{hour:'2-digit',minute:'2-digit'})};
+}
+
+// Store baseline ATR reading per asset for volatility regime detection
+function storeBaselineATR(asset,atrVal){
+  if(!atrVal)return;
+  try{
+    const key='edge_atr_baseline';
+    const stored=JSON.parse(localStorage.getItem(key)||'{}');
+    if(!stored[asset])stored[asset]=[];
+    stored[asset].push({atr:atrVal,ts:Date.now()});
+    // Keep last 20 readings, prune older than 30 days
+    const cutoff=Date.now()-30*86400000;
+    stored[asset]=stored[asset].filter(r=>r.ts>cutoff).slice(-20);
+    localStorage.setItem(key,JSON.stringify(stored));
+  }catch(e){}
+}
+function getBaselineATR(asset){
+  try{
+    const stored=JSON.parse(localStorage.getItem('edge_atr_baseline')||'{}');
+    const readings=stored[asset]||[];
+    if(readings.length<3)return null; // need at least 3 readings
+    return readings.reduce((a,r)=>a+r.atr,0)/readings.length;
+  }catch(e){return null;}
 }
 
 // ═══════════════════════════════════════════════════
@@ -1135,6 +1270,7 @@ async function runScan(){
       try{
         const sig=await analyseAsset(asset,msg=>{if(pEl)pEl.innerHTML=`<span class="act">▶ ${asset} · ${msg}</span>`;});
         results.push(sig);
+        storeBaselineATR(asset,sig.atr); // store ATR reading for volatility baseline
         if(pEl)pEl.innerHTML=`<span class="done">✓ ${asset} · ${sig.tier.toUpperCase()} · ${sig.score}/${sig.maxScore}pts</span>`;
       }catch(e){
         results.push({asset,error:true,score:0,tier:'none',disqualified:true,disqualifyReasons:[e.message]});
@@ -1158,6 +1294,8 @@ async function runScan(){
     updateSigBadge(results.filter(s=>(s.tier==='strong'||s.tier==='moderate')&&!s.disqualified).length);
     // Check open position risk against latest signal directions
     checkPositionRisk();
+    // Auto-run diagnostic if enough closed observations exist
+    autoRunDiagnostic();
   }catch(e){
     document.getElementById('sigContent').innerHTML=`<div class="empty"><div class="empty-icon">⚠</div><div class="empty-txt">Scan failed: ${e.message}</div></div>`;
   }
@@ -1235,11 +1373,31 @@ function renderSignals(){
     // Check if already logged
     const alreadyLogged=trades.some(t=>t.sigAsset===s.asset&&t.observation&&t.status==='OPEN'&&t.sigScanned===s.scanned);
     const canLog=(s.tier==='strong'||s.tier==='moderate')&&!s.disqualified&&s.entry;
+    // SKIP gate: check cached AI verdict for this signal
+    const cachedVerdict=aiCache[sigFingerprint(s)];
+    const aiSkipped=cachedVerdict&&cachedVerdict.verdict==='SKIP';
+    const aiNotEvaluated=canLog&&!cachedVerdict&&!alreadyLogged;
+    // canLogFinal: can log only if not SKIP
+    const canLogFinal=canLog&&!aiSkipped&&!alreadyLogged;
 
     const l1h=(s.l1||[]).map(f=>fRow(f)).join('');
     const l2h=(s.l2||[]).map(f=>fRow(f)).join('');
     const l3h=(s.l3||[]).map(f=>fRow(f)).join('');
     const disqH=s.disqualifyReasons?.length?`<div class="disq-notice"><strong>⛔ Disqualified</strong>${s.disqualifyReasons.map(r=>`• ${r}`).join('<br>')}</div>`:'';
+
+    // Build log button state
+    let logBtnHTML='';
+    if(canLog){
+      if(alreadyLogged){
+        logBtnHTML=`<button class="log-sig-btn already">✓ Already Logged</button>`;
+      } else if(aiSkipped){
+        logBtnHTML=`<button class="log-sig-btn" style="opacity:.45;pointer-events:none;background:var(--bg3);border-color:var(--bdr2);color:var(--mut)">⛔ AI said SKIP — evaluate or use Plan tab</button>`;
+      } else if(aiNotEvaluated){
+        logBtnHTML=`<button class="log-sig-btn" onclick="logSignalDirect(${idx})" style="background:var(--ad);border-color:var(--amb);color:var(--amb)">⚡ Log (no AI eval yet)</button>`;
+      } else {
+        logBtnHTML=`<button class="log-sig-btn" onclick="logSignalDirect(${idx})">⚡ Log as Observation</button>`;
+      }
+    }
 
     const setupH=s.entry?`
       <div class="setup-box">
@@ -1252,16 +1410,18 @@ function renderSignals(){
         <div class="setup-meta">
           <div class="sm-i"><div class="sm-lbl">R:R</div><div class="sm-val pos">${s.rr.toFixed(1)}:1</div></div>
           <div class="sm-i"><div class="sm-lbl">ATR</div><div class="sm-val">${fmtP(s.atr)}</div></div>
-          <div class="sm-i"><div class="sm-lbl">Pull</div><div class="sm-val">${((s.entryPull||0)*100).toFixed(0)}%×ATR</div></div>
+          <div class="sm-i"><div class="sm-lbl">SL Mult</div><div class="sm-val" style="color:${s.slMult>1.5?'var(--amb)':'var(--grn)'}">${(s.slMult||1.5).toFixed(2)}×${s.slMult>1.5?' ↑':''}</div></div>
           <div class="sm-i"><div class="sm-lbl">Conv</div><div class="sm-val" style="color:${s.dirConv>=0.7?'var(--grn)':s.dirConv>=0.6?'var(--amb)':'var(--red)'}">${(s.dirConv*100).toFixed(0)}%</div></div>
         </div>
-        ${canLog?`<button class="log-sig-btn ${alreadyLogged?'already':''}" onclick="logSignalDirect(${idx})">${alreadyLogged?'✓ Already Logged':'⚡ Log as Observation'}</button>`:''}
+        ${s.volRegime&&s.volRegime>1.5?`<div style="font-size:10px;color:var(--amb);background:var(--ad);padding:6px 10px;border-radius:6px;margin-bottom:6px;line-height:1.5">⚠ Elevated volatility: ATR is ${(s.volRegime).toFixed(1)}× above baseline — SL widened to ${(s.slMult).toFixed(2)}×ATR automatically</div>`:''}
+        ${s.baselineATR===null&&s.atr?`<div style="font-size:9px;color:var(--dim);padding:4px 0;margin-bottom:4px">Dynamic SL: building baseline (scan daily to accumulate readings)</div>`:''}
+        ${logBtnHTML}
         ${canLog&&!alreadyLogged?`<button class="ai-eval-btn" onclick="evaluateSignal(${idx})">✦ Evaluate with AI</button>`:''}
-        ${canLog&&!alreadyLogged?`<button class="brief-btn" onclick="generateBrief(${idx})">📋 Generate Pre-Trade Brief</button>`:''}
+        ${canLogFinal?`<button class="brief-btn" onclick="generateBrief(${idx})">📋 Generate Pre-Trade Brief</button>`:''}
         ${canLog?`<button class="refine-btn" id="refineBtn-${idx}" onclick="refineEntry(${idx})">🎯 Refine Entry (1H)</button>`:''}
         <button class="send-plan-btn" onclick="sendToPlan(${idx})">→ Customise in Plan</button>
       </div>`:
-      (canLog?`<button class="log-sig-btn" style="margin-top:10px" onclick="logSignalDirect(${idx})">⚡ Log as Observation</button><button class="ai-eval-btn" onclick="evaluateSignal(${idx})">✦ Evaluate with AI</button><button class="brief-btn" onclick="generateBrief(${idx})">📋 Pre-Trade Brief</button><button class="refine-btn" id="refineBtn-${idx}" onclick="refineEntry(${idx})">🎯 Refine Entry (1H)</button>`:'');
+      (canLog?`${logBtnHTML}<button class="ai-eval-btn" onclick="evaluateSignal(${idx})">✦ Evaluate with AI</button><button class="brief-btn" onclick="generateBrief(${idx})">📋 Pre-Trade Brief</button><button class="refine-btn" id="refineBtn-${idx}" onclick="refineEntry(${idx})">🎯 Refine Entry (1H)</button>`:'');
 
     return`<div class="sc ${tc} ${s.disqualified?'disq':''}" id="sc-${idx}">
       <div class="sc-top" onclick="toggleSig(${idx})">
@@ -1357,11 +1517,14 @@ function logSignalDirect(idx){
   const fp=sigFingerprint(s);
   if(aiCache[fp])trade.aiVerdict=aiCache[fp];
 
-  trades.unshift(trade);
-  saveTrades();
-  const btn=document.querySelector(`#sd-${idx} .log-sig-btn`);
-  if(btn){btn.textContent='✓ Logged';btn.classList.add('already');}
-  showToast(`✓ ${s.asset} ${s.direction} logged as observation`);
+  // Pre-trade gate check
+  checkPreTradeGate(trade, ()=>{
+    trades.unshift(trade);
+    saveTrades();
+    const btn=document.querySelector(`#sd-${idx} .log-sig-btn`);
+    if(btn){btn.textContent='✓ Logged';btn.classList.add('already');}
+    showToast(`✓ ${s.asset} ${s.direction} logged as observation`);
+  });
 }
 
 function showToast(msg){
@@ -1481,18 +1644,21 @@ function logTrade(obs=false){
   const riskPct=+document.getElementById('riskPct').value;
   const posSize=acct*lev;
   const dollarRisk=posSize*(Math.abs(E-S)/E);
-  trades.unshift({
+  const trade={
     id:Date.now().toString(),date:new Date().toISOString().split('T')[0],entryTs:Date.now(),
     asset,direction:planDir,entry:E,stop:S,target:T,
     setup:document.getElementById('pSetup').value,
     notes:document.getElementById('pNotes').value.trim(),
     rr:parseFloat((Math.abs(T-E)/Math.abs(E-S)).toFixed(2)),
     leverage:lev,posSize,dollarRisk:parseFloat(dollarRisk.toFixed(2)),
-    riskPct,acct,
+    riskPct,acct,sessionQ:getSession(),
     score:clScores.reduce((a,b)=>a+b,0),
     observation:obs,status:'OPEN',exitPrice:null,autoClose:false,
+  };
+  checkPreTradeGate(trade,()=>{
+    trades.unshift(trade);
+    saveTrades();clearForm();goTab('journal');
   });
-  saveTrades();clearForm();goTab('journal');
 }
 function clearForm(){['pEntry','pStop','pTarget','pNotes'].forEach(id=>document.getElementById(id).value='');clScores=[0,0,0,0,0,0,0];buildCL();calcAll();}
 
@@ -1617,11 +1783,28 @@ function renderStats(){
   const exp=(wr*avgW)-((1-wr)*avgL),totR=rVals.reduce((a,b)=>a+b,0);
   let peak=0,maxDD=0,eq=0;const curve=[0];
   rVals.forEach(r=>{eq+=r;curve.push(eq);if(eq>peak)peak=eq;const dd=peak-eq;if(dd>maxDD)maxDD=dd;});
-  const byA={},byS={};
+  const byA={},byS={},byET={};
   closed.forEach(t=>{
     if(!byA[t.asset])byA[t.asset]={tot:0,w:0};byA[t.asset].tot++;if(t.status==='WIN')byA[t.asset].w++;
     if(!byS[t.setup])byS[t.setup]={tot:0,w:0};byS[t.setup].tot++;if(t.status==='WIN')byS[t.setup].w++;
   });
+  // Change 8: Fill rate tracking by entry type
+  const allWithET=trades.filter(t=>t.entryType);
+  allWithET.forEach(t=>{
+    const et=t.entryType||'unknown';
+    if(!byET[et])byET[et]={logged:0,filled:0,nf:0,wins:0,losses:0};
+    byET[et].logged++;
+    if(t.status==='NOT_FILLED')byET[et].nf++;
+    else if(t.status==='WIN'){byET[et].filled++;byET[et].wins++;}
+    else if(t.status==='LOSS'||t.status==='BE'){byET[et].filled++;if(t.status==='LOSS')byET[et].losses++;}
+    else if(t.status==='OPEN')byET[et].filled++; // assumed filled while open
+  });
+  const fillRateHTML=Object.keys(byET).length?`<div class="card"><div class="ct">Fill Rate by Entry Type</div>${Object.entries(byET).map(([et,d])=>{
+    const fillRate=d.logged?((d.filled/d.logged)*100).toFixed(0):0;
+    const wr2=d.filled?(d.wins/d.filled*100).toFixed(0):0;
+    return`<div class="br-row"><span class="br-lbl" style="font-size:10px;width:70px;text-transform:uppercase">${et}</span><div style="flex:1"><div class="br-bw" style="margin-bottom:2px"><div class="br-b" style="width:${fillRate}%;background:var(--blu)"></div></div><div style="font-size:9px;color:var(--mut)">${fillRate}% filled · ${wr2}% WR when filled · ${d.nf} not filled</div></div></div>`;
+  }).join('')}</div>`:'';
+
   el.innerHTML=obsHtml+`
     <div class="sg2">
       <div class="sc-stat"><div class="sc-lbl">Closed</div><div class="sc-val">${closed.length}</div><div class="sc-sub">${trades.filter(t=>t.status==='OPEN').length} open · ${nf} no fill</div></div>
@@ -1632,6 +1815,7 @@ function renderStats(){
     <div class="card"><div class="ct">Equity Curve</div><canvas id="eqCanvas" style="width:100%;height:120px"></canvas></div>
     <div class="card"><div class="ct">By Asset</div>${Object.entries(byA).map(([a,d])=>{const w=d.tot?d.w/d.tot:0;return`<div class="br-row"><span class="br-lbl">${a}</span><div class="br-bw"><div class="br-b" style="width:${w*100}%;background:${w>=.5?'var(--grn)':'var(--red)'}"></div></div><span class="br-st">${d.w}/${d.tot} · ${(w*100).toFixed(0)}%</span></div>`;}).join('')}</div>
     <div class="card"><div class="ct">By Setup</div>${Object.entries(byS).map(([s,d])=>{const w=d.tot?d.w/d.tot:0;return`<div class="br-row"><span class="br-lbl" style="font-size:10px;width:62px">${s}</span><div class="br-bw"><div class="br-b" style="width:${w*100}%;background:${w>=.5?'var(--grn)':'var(--red)'}"></div></div><span class="br-st">${d.w}/${d.tot} · ${(w*100).toFixed(0)}%</span></div>`;}).join('')}</div>
+    ${fillRateHTML}
     <div style="height:20px"></div>`;
   setTimeout(()=>drawChart(curve),60);
 }
@@ -2719,6 +2903,243 @@ function checkPositionRisk(){
   </div>`;
 }
 
+// ═══════════════════════════════════════════════════
+// DIAGNOSTIC ENGINE v14 — EVOLVED
+// ═══════════════════════════════════════════════════
+const DIAG_CACHE_KEY  = 'edge_diag_report';
+const DIAG_TS_KEY     = 'edge_diag_ts';
+const DIAG_MIN_TRADES = 3;
+
+const TIER_THRESHOLDS = { minor:15, scoring:30, sizing:50 };
+
+const DIAG_SYSTEM=`You are an elite systematic trading coach specialising in crypto perpetual futures. You have the trader's full observation history, current active signals, and macro environment data. Produce a concise, decision-focused diagnostic. Every output must end with a clear action.
+
+TIERED CHANGE THRESHOLDS — enforce strictly:
+- Under 15 trades: Diagnose only. improvement_insight must be null. upgrade_recommendation.status must be "WAIT".
+- 15-29 trades: Minor filters only (session exclusion, asset exclusion, confidence floor).
+- 30-49 trades: Scoring threshold changes allowed.
+- 50+ trades: All changes including SL multiplier and leverage.
+
+CHANGEABLE CFG CONSTANTS (use exact names in any upgrade prompts):
+- DIR_CONV_MOD: current 0.60 — minimum directional conviction for MODERATE tier
+- DIR_CONV_STRONG: current 0.70 — minimum conviction for STRONG tier
+- SCORE_MOD: current 9 — minimum score (out of 18) for MODERATE tier
+- SCORE_STRONG: current 12 — minimum score for STRONG tier
+- ATR_SL: current 1.5 — SL distance multiplier (× ATR)
+- ATR_TP: current 3.0 — TP distance multiplier (× ATR)
+- ATR_ENTRY_CONTINUATION: current 0.2 — entry pull for continuation setups
+- ATR_ENTRY_BREAKOUT: current 0.1 — entry pull for breakout setups
+- ADX_TREND_MIN: current 22 — minimum ADX to qualify as trending
+- VOL_MULT: current 1.25 — volume ratio required to confirm structure
+DO NOT suggest changing ATR_PERIOD, EMA_PERIOD, ADX_PERIOD, FUND_EDGE, FUND_EXTREME.
+
+UPGRADE RECOMMENDATION RULES:
+- Status SEND: pattern appears in ≥60% of losses AND ≥5 occurrences AND tier threshold met AND macro is NOT the sole explanation
+- Status WAIT: pattern exists but <5 occurrences, OR below tier threshold, OR competing causes
+- Status MACRO_OVERRIDE: losses are primarily explained by macro regime (e.g. RISK_OFF, geopolitical shock) — do not change code until regime normalises
+- When status is SEND: generate a complete upgrade_prompt string using the exact CFG constant names above
+
+Rules: Be specific — cite actual numbers. trade_decision must be ENTER/WAIT/REBALANCE/HEDGE/EXIT. For HEDGE and REBALANCE always include specific guidance on what action to take. Confidence score reflects diagnostic confidence. Signal quality only if active signals exist.
+
+Respond ONLY with valid JSON. No markdown. No backticks. Start { end }.
+
+Schema:
+{"market_summary":"<2-3 lines>","system_diagnosis":"<specific numbers>","trade_decision":"ENTER"|"WAIT"|"REBALANCE"|"HEDGE"|"EXIT","decision_reason":"<one sentence>","decision_why":"<2-3 sentences>","hedge_guidance":"<null or specific hedge action if decision is HEDGE>","rebalance_guidance":"<null or specific rebalance action if decision is REBALANCE>","confidence_score":<0-100>,"confidence_why":"<one sentence>","risk_level":"LOW"|"MEDIUM"|"HIGH","risk_why":"<one sentence>","monitor_next":"<specific with price level>","improvement_insight":null|{"tier":"MINOR"|"SCORING"|"SIZING","trades_analysed":<int>,"current_rule":"<current>","proposed_change":"<concrete>","evidence":"<win rate, occurrences>","avoid_overfitting_note":"<justification>"},"upgrade_recommendation":{"status":"SEND"|"WAIT"|"MACRO_OVERRIDE","reason":"<why this status>","prompt_text":null|"<complete upgrade prompt when status=SEND — use exact CFG constant names>"},"signal_quality":[{"asset":"<asset>","strength":"STRONG"|"MODERATE"|"WEAK","confidence":<0-100>,"risk_level":"LOW"|"MEDIUM"|"HIGH","why":"<one sentence>"}],"threshold_status":{"trades_closed":<int>,"current_tier":<1|2|3|4>,"tier_label":"<label>","next_unlock":"<what opens next>"},"worst_loss_pattern":"<null if under 5 trades>","skip_override_count":<int>}`;
+
+async function autoRunDiagnostic(){
+  if(!apiKey)return;
+  const closed=trades.filter(t=>t.status!=='OPEN'&&t.status!=='NOT_FILLED'&&t.observation);
+  if(closed.length<DIAG_MIN_TRADES)return;
+  const lastTs=localStorage.getItem(DIAG_TS_KEY);
+  const lastCache=localStorage.getItem(DIAG_CACHE_KEY);
+  if(lastTs&&lastCache){
+    const ageH=(Date.now()-parseInt(lastTs))/3600000;
+    const lastCount=JSON.parse(lastCache).tradeCount||0;
+    if(ageH<4&&lastCount===closed.length)return;
+  }
+  try{
+    const wins=closed.filter(t=>t.status==='WIN').length;
+    const losses=closed.filter(t=>t.status==='LOSS').length;
+    const bes=closed.filter(t=>t.status==='BE').length;
+    const rVals=closed.map(t=>{if(t.exitPrice)return(Math.abs(t.exitPrice-t.entry)/Math.abs(t.stop-t.entry))*(t.status==='WIN'?1:-1);return t.status==='WIN'?t.rr:-1;});
+    const totR=rVals.reduce((a,b)=>a+b,0);
+    const exp=closed.length?totR/closed.length:0;
+    const skipOverrides=closed.filter(t=>t.aiVerdict?.verdict==='SKIP').length;
+    // Change 4: Cap at last 50 trades to control prompt size
+    const recentClosed=closed.length>50?closed.slice(-50):closed;
+    const tradeData=recentClosed.map(t=>({asset:t.asset,direction:t.direction,date:t.date,status:t.status,setup:t.setup,tier:t.tier||'N/A',score:t.score||0,session:t.sessionQ||'N/A',entryType:t.entryType||'N/A',rr:t.rr,aiVerdict:t.aiVerdict?{verdict:t.aiVerdict.verdict,confidence:t.aiVerdict.confidence}:null,debriefWeakFactor:t.debriefResult?.weakest_factor||null,debriefPattern:t.debriefResult?.pattern_flag||null,processScore:t.debriefResult?.process_score||null,notes:t.notes?.slice(0,120)||''}));
+    // Change 5: Prune AI cache entries older than 7 days
+    try{
+      const now=Date.now();const sevenDays=7*86400000;
+      const pruned={};let pruneCount=0;
+      Object.entries(aiCache).forEach(([k,v])=>{
+        if(v.ts){const age=now-new Date(v.ts+'Z').getTime();if(age<sevenDays)pruned[k]=v;else pruneCount++;}
+        else pruned[k]=v;
+      });
+      if(pruneCount>0){aiCache=pruned;localStorage.setItem('edge_ai_cache',JSON.stringify(aiCache));}
+    }catch(e){}
+    const activeSignals=signals.filter(s=>!s.error&&(s.tier==='strong'||s.tier==='moderate')&&!s.disqualified).map(s=>({asset:s.asset,direction:s.direction,tier:s.tier,score:s.score,maxScore:s.maxScore,dirConv:(s.dirConv*100).toFixed(0)+'%',adx:s.adx,entryType:s.entryType,funding:s.funding?(s.funding*100).toFixed(4)+'%':null,aiVerdict:aiCache[sigFingerprint(s)]||null,volRegime:s.volRegime?s.volRegime.toFixed(2):null,slMult:s.slMult||1.5}));
+    let macroContext='No macro data available.';
+    const macroStored=localStorage.getItem(MACRO_CACHE_KEY);
+    if(macroStored){try{const m=JSON.parse(macroStored);macroContext=`Regime:${m.regime||'?'} CryptoBias:${m.crypto_bias||'?'} ${m.macro_summary?.slice(0,200)||''}`;}catch(e){}}
+    const tier=closed.length>=TIER_THRESHOLDS.sizing?4:closed.length>=TIER_THRESHOLDS.scoring?3:closed.length>=TIER_THRESHOLDS.minor?2:1;
+    const prompt=`DIAGNOSTIC REQUEST\nClosed:${closed.length} (${wins}W/${losses}L/${bes}BE) WR:${closed.length?(wins/closed.length*100).toFixed(0):0}% TotalR:${totR.toFixed(2)} Exp:${exp.toFixed(2)}R/trade SKIP-overrides:${skipOverrides}\nTier:${tier} (minor≥${TIER_THRESHOLDS.minor},scoring≥${TIER_THRESHOLDS.scoring},sizing≥${TIER_THRESHOLDS.sizing})\n\nMACRO:${macroContext}\n\nACTIVE SIGNALS:${activeSignals.length?JSON.stringify(activeSignals):'None'}\n\nTRADES:${JSON.stringify(tradeData)}\n\nProduce diagnostic JSON. Tier${tier} — enforce threshold rules for improvement_insight.`;
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1200,system:DIAG_SYSTEM,messages:[{role:'user',content:prompt}]})});
+    if(!resp.ok)return;
+    const data=await resp.json();
+    const textBlock=data.content?.find(c=>c.type==='text');
+    if(!textBlock?.text)return;
+    const report=safeParseJSON(textBlock.text);
+    if(!report.trade_decision)return;
+    localStorage.setItem(DIAG_CACHE_KEY,JSON.stringify({report,tradeCount:closed.length,wins,losses,ts:Date.now()}));
+    localStorage.setItem(DIAG_TS_KEY,Date.now().toString());
+    renderDiagPanel();
+  }catch(e){}
+}
+
+function renderDiagPanel(){
+  const el=document.getElementById('diagPanel');
+  if(!el)return;
+  const closed=trades.filter(t=>t.status!=='OPEN'&&t.status!=='NOT_FILLED'&&t.observation);
+  if(closed.length<DIAG_MIN_TRADES){el.innerHTML='';return;}
+  const cached=localStorage.getItem(DIAG_CACHE_KEY);
+  if(!cached){el.innerHTML=`<div class="diag-running"><div class="spin" style="width:16px;height:16px;border-width:2px;flex-shrink:0;border-top-color:var(--txt)"></div><div class="diag-running-txt"><b>Diagnostic Analysis Running</b>Analysing ${closed.length} observations...</div></div>`;return;}
+  try{
+    const {report:r,wins,losses,tradeCount,ts}=JSON.parse(cached);
+    const tsLabel=ts?new Date(ts).toLocaleString('en-SG',{weekday:'short',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
+    const decMap={ENTER:{cls:'da-enter',color:'var(--grn)',icon:'⚡'},WAIT:{cls:'da-wait',color:'var(--amb)',icon:'⏳'},EXIT:{cls:'da-exit',color:'var(--red)',icon:'🚨'},HEDGE:{cls:'da-hedge',color:'var(--blu)',icon:'🛡'},REBALANCE:{cls:'da-rebalance',color:'var(--pur)',icon:'⚖'}};
+    const dec=decMap[r.trade_decision]||decMap.WAIT;
+    const conf=r.confidence_score||0;
+    const confColor=conf>=70?'var(--grn)':conf>=50?'var(--amb)':'var(--red)';
+    const riskColor={LOW:'var(--grn)',MEDIUM:'var(--amb)',HIGH:'var(--red)'}[r.risk_level]||'var(--mut)';
+    const wr=tradeCount?wins/tradeCount:0;
+    const circumference=2*Math.PI*22;
+    const dash=(wr*circumference).toFixed(1);
+    const ringColor=wr>=0.5?'#059669':wr>=0.34?'#d97706':'#dc2626';
+    const ts_data=r.threshold_status||{};
+    const tierColors=['tp-1','tp-2','tp-3','tp-4'];
+    const tierColor=tierColors[(ts_data.current_tier||1)-1]||'tp-1';
+    const sqHTML=r.signal_quality?.length?`<div class="diag-section"><div class="diag-sec-lbl">Active Signal Quality</div><div class="signal-quality-grid">${r.signal_quality.map(s=>{const sc={STRONG:'sq-strong',MODERATE:'sq-moderate',WEAK:'sq-weak'}[s.strength]||'sq-moderate';const rc={LOW:'sq-low',MEDIUM:'sq-medium',HIGH:'sq-high'}[s.risk_level]||'sq-medium';const cc=s.confidence>=70?'var(--grn)':s.confidence>=50?'var(--amb)':'var(--red)';return`<div class="sq-item"><div class="sq-top"><span class="sq-asset">${s.asset}</span><div class="sq-badges"><span class="sq-strength ${sc}">${s.strength}</span><span class="sq-risk ${rc}">${s.risk_level} RISK</span></div></div><div class="sq-conf-row"><span class="sq-conf-lbl">Confidence</span><div class="sq-conf-bar-w"><div class="sq-conf-bar" style="width:${s.confidence}%;background:${cc}"></div></div><span class="sq-conf-num" style="color:${cc}">${s.confidence}%</span></div>${s.why?`<div class="sq-why">${s.why}</div>`:''}</div>`;}).join('')}</div></div>`:'';
+    const insightHTML=r.improvement_insight?`<div class="diag-section"><div class="diag-rule"><div class="diag-rule-lbl">✦ ${{'MINOR':'Minor Filter','SCORING':'Scoring','SIZING':'Sizing'}[r.improvement_insight.tier]||r.improvement_insight.tier} Change — ${r.improvement_insight.trades_analysed} trades</div><div style="font-size:11px;color:var(--mut);margin-bottom:6px;line-height:1.5"><span style="color:var(--red);font-weight:600">Current:</span> ${r.improvement_insight.current_rule||''}</div><div class="diag-rule-text" style="margin-bottom:6px"><span style="color:var(--grn);font-weight:600">Change to:</span> ${r.improvement_insight.proposed_change||''}</div><div style="font-size:10px;color:var(--mut);line-height:1.5;padding-top:6px;border-top:1px solid rgba(5,150,105,.2)">Evidence: ${r.improvement_insight.evidence||''}</div>${r.improvement_insight.avoid_overfitting_note?`<div style="font-size:10px;color:var(--amb);margin-top:5px">⚠ ${r.improvement_insight.avoid_overfitting_note}</div>`:''}</div></div>`:'';
+
+    // Upgrade recommendation block
+    const ur=r.upgrade_recommendation;
+    let upgradeHTML='';
+    if(ur){
+      const urStyles={
+        SEND:{bg:'var(--gd2)',border:'var(--grn)',icon:'🟢',label:'SEND UPGRADE PROMPT NOW',textColor:'var(--grn)'},
+        WAIT:{bg:'var(--ad)',border:'var(--amb)',icon:'🟡',label:'NOT YET — KEEP OBSERVING',textColor:'var(--amb)'},
+        MACRO_OVERRIDE:{bg:'var(--rd)',border:'var(--red)',icon:'🔴',label:'DO NOT UPGRADE — MACRO OVERRIDE',textColor:'var(--red)'}
+      }[ur.status]||{bg:'var(--ad)',border:'var(--amb)',icon:'🟡',label:'NOT YET',textColor:'var(--amb)'};
+      upgradeHTML=`<div class="diag-section">
+        <div style="background:${urStyles.bg};border:1.5px solid ${urStyles.border};border-radius:10px;padding:13px 14px">
+          <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:${urStyles.textColor};margin-bottom:6px">${urStyles.icon} Upgrade Recommendation</div>
+          <div style="font-size:14px;font-weight:700;color:${urStyles.textColor};margin-bottom:6px">${urStyles.label}</div>
+          <div style="font-size:11px;color:var(--txt2);line-height:1.6;margin-bottom:${ur.prompt_text?'10px':'0'}">${ur.reason||''}</div>
+          ${ur.prompt_text?`<div style="background:var(--bg1);border:1px solid var(--bdr);border-radius:8px;padding:11px 12px;margin-top:8px">
+            <div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);margin-bottom:7px">Copy this prompt and send to Claude:</div>
+            <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--txt);line-height:1.7;white-space:pre-wrap">${ur.prompt_text}</div>
+            <button onclick="navigator.clipboard.writeText(${JSON.stringify(ur.prompt_text)}).then(()=>showToast('✓ Upgrade prompt copied'))" style="margin-top:9px;width:100%;padding:9px;background:var(--txt);color:#fff;border:none;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer">📋 Copy Upgrade Prompt</button>
+          </div>`:''}
+        </div>
+      </div>`;
+    }
+    el.innerHTML=`<div class="diag-card">
+      <div class="diag-hdr">
+        <div class="diag-hdr-left">
+          <div class="diag-label">System Diagnostic <span class="diag-badge db-auto">AUTO</span></div>
+          <div class="diag-title">${r.market_summary?.split('.')[0]||'Performance Analysis'}</div>
+          <div class="diag-sub">${tradeCount} obs · ${wins}W ${losses}L${r.skip_override_count>0?` · ⚠ ${r.skip_override_count} SKIP overrides`:''}</div>
+        </div>
+        <div class="diag-wr-ring"><svg viewBox="0 0 52 52"><circle class="diag-ring-bg" cx="26" cy="26" r="22"/><circle class="diag-ring-fill" cx="26" cy="26" r="22" stroke="${ringColor}" stroke-dasharray="${dash} ${circumference}"/></svg><div class="diag-ring-num">${(wr*100).toFixed(0)}%</div></div>
+      </div>
+      <div class="diag-body">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap"><span class="diag-threshold-pill ${tierColor}">📊 ${ts_data.tier_label||'Tier 1'}</span>${ts_data.next_unlock?`<span style="font-size:10px;color:var(--mut)">${ts_data.next_unlock}</span>`:''}</div>
+        <div class="diag-section"><div class="diag-sec-lbl">Market Summary</div><div style="font-size:12px;color:var(--txt2);line-height:1.7">${r.market_summary||'—'}</div></div>
+        <div class="diag-section"><div class="diag-sec-lbl">System Diagnosis</div><div style="font-size:12px;color:var(--txt2);line-height:1.7;margin-bottom:8px">${r.system_diagnosis||'—'}</div>${r.worst_loss_pattern?`<div style="font-size:11px;color:var(--red);background:var(--rd);padding:8px 11px;border-radius:7px;line-height:1.5">✗ Worst pattern: ${r.worst_loss_pattern}</div>`:''}</div>
+        <div class="diag-action-box ${dec.cls}"><div class="diag-action-lbl" style="color:${dec.color}">${dec.icon} Trade Decision</div><div class="diag-action-txt" style="color:${dec.color}">${r.trade_decision} — ${r.decision_reason||''}</div>${r.decision_why?`<div class="diag-action-why" style="color:var(--txt2)">${r.decision_why}</div>`:''}</div>
+        ${r.trade_decision==='HEDGE'&&r.hedge_guidance?`<div style="background:var(--bd);border:1px solid var(--blu);border-radius:9px;padding:11px 13px;margin-bottom:10px"><div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--blu);margin-bottom:5px">🛡 How to Hedge</div><div style="font-size:12px;color:var(--txt2);line-height:1.6">${r.hedge_guidance}</div></div>`:''}
+        ${r.trade_decision==='REBALANCE'&&r.rebalance_guidance?`<div style="background:var(--pud);border:1px solid var(--pur);border-radius:9px;padding:11px 13px;margin-bottom:10px"><div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--pur);margin-bottom:5px">⚖ How to Rebalance</div><div style="font-size:12px;color:var(--txt2);line-height:1.6">${r.rebalance_guidance}</div></div>`:''}
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+          <div class="diag-kpi" style="border-radius:9px"><div class="diag-kpi-lbl">Confidence</div><div class="diag-kpi-val" style="color:${confColor}">${conf}%</div><div class="diag-conf-bar-w"><div class="diag-conf-bar" style="width:${conf}%;background:${confColor}"></div></div><div style="font-size:9px;color:var(--mut);margin-top:3px;line-height:1.4">${r.confidence_why||''}</div></div>
+          <div class="diag-kpi" style="border-radius:9px"><div class="diag-kpi-lbl">Risk Level</div><div class="diag-kpi-val" style="color:${riskColor}">${r.risk_level||'—'}</div><div style="font-size:9px;color:var(--mut);margin-top:6px;line-height:1.4">${r.risk_why||''}</div></div>
+        </div>
+        ${sqHTML}
+        ${r.monitor_next?`<div class="diag-section"><div class="diag-sec-lbl">Monitor Next</div><div style="font-size:12px;color:var(--txt2);line-height:1.7;background:var(--bd);border-left:3px solid var(--blu);padding:9px 12px;border-radius:0 7px 7px 0">${r.monitor_next}</div></div>`:''}
+        ${insightHTML}
+        ${upgradeHTML}
+      </div>
+      <div class="diag-ts"><span>Auto-analysed ${tsLabel} · sonnet-4</span><button onclick="forceRunDiagnostic()" style="font-family:'DM Mono',monospace;font-size:10px;font-weight:600;color:var(--mut);background:none;border:none;cursor:pointer">↻ Re-analyse</button></div>
+    </div>`;
+  }catch(e){el.innerHTML='';}
+}
+
+function forceRunDiagnostic(){
+  localStorage.removeItem(DIAG_CACHE_KEY);
+  localStorage.removeItem(DIAG_TS_KEY);
+  renderDiagPanel();
+  autoRunDiagnostic();
+}
+
+// ═══════════════════════════════════════════════════
+// PRE-TRADE GATE
+// ═══════════════════════════════════════════════════
+function checkPreTradeGate(tradeToLog,onProceed){
+  const cached=localStorage.getItem(DIAG_CACHE_KEY);
+  if(!cached){onProceed();return;}
+  const closed=trades.filter(t=>t.status!=='OPEN'&&t.status!=='NOT_FILLED'&&t.observation);
+  if(closed.length<5){onProceed();return;}
+  try{
+    const {report:r}=JSON.parse(cached);
+    const gateReasons=[];
+    // NOTE: SKIP verdict check removed — handled by hard gate in renderSignals()
+    // Gate 1: Asset+direction loss pattern
+    const assetT=closed.filter(t=>t.asset===tradeToLog.asset&&t.direction===tradeToLog.direction);
+    if(assetT.length>=3){
+      const assetW=assetT.filter(t=>t.status==='WIN').length;
+      const assetWR=(assetW/assetT.length*100).toFixed(0);
+      if(parseInt(assetWR)<34)gateReasons.push({icon:'📊',title:`${tradeToLog.asset} ${tradeToLog.direction} Pattern`,detail:`Last ${assetT.length} ${tradeToLog.asset} ${tradeToLog.direction} trades: ${assetWR}% win rate`,severity:'warn',stat_label:'Asset WR',stat_val:`${assetWR}%`,stat_color:'var(--red)'});
+    }
+    // Gate 2: Low liquidity session pattern
+    if(getSession()==='low'){
+      const lowT=closed.filter(t=>t.sessionQ==='low');
+      if(lowT.length>=3){const lowW=lowT.filter(t=>t.status==='WIN').length;const lowWR=(lowW/lowT.length*100).toFixed(0);if(parseInt(lowWR)<34)gateReasons.push({icon:'🌙',title:'Low Liquidity Session',detail:`${lowT.length} low-liq trades: ${lowWR}% win rate`,severity:'warn',stat_label:'Low Liq WR',stat_val:`${lowWR}%`,stat_color:'var(--red)'});}
+    }
+    // Gate 3: Diagnostic recommends WAIT or EXIT
+    if(r.trade_decision==='WAIT'||r.trade_decision==='EXIT')gateReasons.push({icon:'🛑',title:`Diagnostic says ${r.trade_decision}`,detail:r.decision_reason||'System recommends against new positions',severity:'warn',stat_label:'Diagnosis',stat_val:r.trade_decision,stat_color:'var(--amb)'});
+    // Gate 4: Macro regime check — only if cache is fresh (<6 hours)
+    const macroStored=localStorage.getItem(MACRO_CACHE_KEY);
+    const macroTs=localStorage.getItem(MACRO_TS_KEY);
+    if(macroStored&&macroTs){
+      const macroAgeH=(Date.now()-parseInt(macroTs))/3600000;
+      if(macroAgeH<6){
+        try{
+          const m=JSON.parse(macroStored);
+          if(m.regime==='RISK_OFF'){
+            gateReasons.push({icon:'🌍',title:'Macro: RISK_OFF Regime',detail:`Current macro shows RISK_OFF — ${m.crypto_bias==='BEARISH'?'crypto bearish bias':'conditions unfavourable'}. Updated ${macroAgeH.toFixed(1)}h ago.`,severity:'danger',stat_label:'Macro',stat_val:'RISK_OFF',stat_color:'var(--red)'});
+          } else if(m.regime==='UNCERTAIN'){
+            gateReasons.push({icon:'⚠',title:'Macro: UNCERTAIN Regime',detail:`Macro environment is UNCERTAIN. Consider waiting for clearer conditions. Report is ${macroAgeH.toFixed(1)}h old.`,severity:'warn',stat_label:'Macro',stat_val:'UNCERTAIN',stat_color:'var(--amb)'});
+          }
+        }catch(e){}
+      }
+    }
+    if(!gateReasons.length){onProceed();return;}
+    showPreTradeGate(tradeToLog,gateReasons,onProceed);
+  }catch(e){onProceed();}
+}
+
+function showPreTradeGate(trade,reasons,onProceed){
+  const modal=document.getElementById('ptgModal');
+  const hasDanger=reasons.some(r=>r.severity==='danger');
+  const statsHTML=reasons.slice(0,3).map(r=>`<div class="ptg-stat"><div class="ptg-stat-lbl">${r.stat_label||'Note'}</div><div class="ptg-stat-val" style="color:${r.stat_color||'var(--red)'}">${r.stat_val||'—'}</div></div>`).join('');
+  const patternsHTML=reasons.map(r=>`<div class="ptg-pattern" style="${r.severity==='warn'?'background:var(--ad);border-color:var(--amb)':''}"><div class="ptg-pattern-lbl" style="${r.severity==='warn'?'color:var(--amb)':''}">${r.icon} ${r.title}</div><div class="ptg-pattern-txt">${r.detail}</div></div>`).join('');
+  modal.innerHTML=`<div class="ptg-overlay" onclick="closePTG()"><div class="ptg-sheet" onclick="event.stopPropagation()"><div class="ptg-icon">${hasDanger?'⛔':'⚠'}</div><div class="ptg-title">${hasDanger?'Pattern Match — High Risk':'Pattern Warning'}</div><div class="ptg-sub">This setup matches historical loss patterns.<br>Review before proceeding.</div><div class="ptg-stats">${statsHTML}</div>${patternsHTML}<button class="ptg-proceed" onclick="closePTGAndProceed()">${hasDanger?'Override & Log Anyway':'Log Trade'}</button><button class="ptg-cancel" onclick="closePTG()">← Go Back</button><div class="ptg-note">Warning only — not a block. Requires 5+ observations to activate.</div></div></div>`;
+  modal.style.display='block';
+  window._ptgCallback=onProceed;
+}
+
+function closePTG(){document.getElementById('ptgModal').style.display='none';window._ptgCallback=null;}
+function closePTGAndProceed(){document.getElementById('ptgModal').style.display='none';if(window._ptgCallback)window._ptgCallback();window._ptgCallback=null;}
 function fmtP(p){if(!p&&p!==0)return'—';if(p>=10000)return p.toLocaleString('en',{maximumFractionDigits:0});if(p>=1000)return p.toLocaleString('en',{minimumFractionDigits:1,maximumFractionDigits:1});if(p>=1)return p.toFixed(3);return p.toFixed(5);}
 function fmtOI(v){if(!v)return'—';if(v>=1e9)return(v/1e9).toFixed(1)+'B';if(v>=1e6)return(v/1e6).toFixed(1)+'M';if(v>=1e3)return(v/1e3).toFixed(1)+'K';return v.toFixed(0);}
 function priceDp(p){return p>=10000?0:p>=1000?1:p>=1?3:5;}
@@ -2730,8 +3151,9 @@ buildCL();renderSession();fetchMkt();calcAll();
 setInterval(()=>{fetchMkt();renderSession();},60000);
 if(signals.length){renderSignals();updateSigBadge(signals.filter(s=>(s.tier==='strong'||s.tier==='moderate')&&!s.disqualified).length);}
 renderApiStatus();
-// Restore cached macro report if present
 if(localStorage.getItem(MACRO_CACHE_KEY))renderMacroTab();
+// Restore diagnostic panel if cached
+if(localStorage.getItem(DIAG_CACHE_KEY))renderDiagPanel();
 </script>
 </body>
 </html>
